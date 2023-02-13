@@ -91,7 +91,8 @@ for d in range(D):
 # Visualize the pricipal components
 figure(figsize=(8,6))
 for k in range(K):
-    N1 = np.ceil(np.sqrt(K)); N2 = np.ceil(K/N1)
+    N1 = int(np.ceil(np.sqrt(K)))
+    N2 = int(np.ceil(K/N1))
     subplot(N2, N1, k+1)
     I = np.reshape(V[:,k], (16,16))
     imshow(I, cmap=cm.hot)
