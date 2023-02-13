@@ -47,8 +47,8 @@ Ys = [Y2]
 titles = ['Zero-mean', 'Zero-mean and unit variance']
 threshold = 0.9
 # Choose two PCs to plot (the projection)
-i = 0
-j = 1
+i = 1
+j = 2
 
 # Make the plot
 plt.figure(figsize=(10, 15))
