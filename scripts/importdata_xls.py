@@ -11,7 +11,7 @@ import xlrd
 
 # Load xls sheet with data
 # There's only a single sheet in the .xls, so we take out that sheet
-doc = xlrd.open_workbook('Dry_Bean_Dataset.xls').sheet_by_index(0)
+doc = xlrd.open_workbook('../data/Dry_Bean_Dataset.xls').sheet_by_index(0)
 
 # Extract attribute names
 attributeNames = doc.row_values(rowx=0, start_colx=0, end_colx=17)
