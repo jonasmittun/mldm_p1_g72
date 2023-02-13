@@ -12,7 +12,7 @@ from importdata_xls import *
 # Mean
 # Battery power, clock speed, n_cores, primary camera mega pixels, ram,
 # attributes_to_be_analysed = ['mobile_wt','battery_power','clock_speed','n_cores','int_memory','ram','pc', 'sc_h', 'sc_w', 'm_dep', 'touch_screen']
-attributes_to_be_analysed = ['Area', 'Perimeter']
+attributes_to_be_analysed = ['Area', 'Perimeter', 'MajorAxisLength', 'MinorAxisLength', 'AspectRation', 'Eccentricity', 'ConvexArea', 'EquivDiameter', 'Extent', 'Solidity', 'roundness', 'Compactness', 'ShapeFactor1', 'ShapeFactor2', 'ShapeFactor3', 'ShapeFactor4']
 attributeName_to_index = {}
 for i, att in enumerate(attributeNames):
     if att in attributes_to_be_analysed:
@@ -40,19 +40,40 @@ for att in attributes_to_be_analysed:
 # x_att = 'mobile_wt'
 # y_att = 'm_dep'
 
-x_att = 'mobile_wt'
-y_att = 'battery_power'
 # plot_pairs = [('ram','pc'),('mobile_wt','battery_power'),('n_cores','ram')]
-plot_pairs = [('Area','Perimeter')]
 
-for x,y in plot_pairs:
-    x_l = X[:,attributeName_to_index[x]]
-    y_l = X[:,attributeName_to_index[y]]
-    plt.title(str(x)+" vs. "+str(y))
-    plt.scatter(x=x_l,
-                y=y_l)
-    plt.xlabel(x)
-    plt.ylabel(y)
+
+
+
+# for x_att,y_att in plot_pairs:
+#     x_l = X[:,attributeName_to_index[x_att]]
+#     y_l = X[:,attributeName_to_index[y_att]]
+#     plt.title(str(x_att)+" vs. "+str(y_att))
+#     plt.scatter(x=x_l,
+#                 y=y_l)
+#     plt.xlabel(x_att)
+#     plt.ylabel(y_att)
+#     plt.show()
+
+X_c = X.copy();
+y_c = y.copy();
+
+plot_pairs = [('Area','Perimeter'),('AspectRation','roundness'),('Area','roundness')]
+
+attributeNames_c = attributeNames.copy();
+for x_att, y_att in plot_pairs:
+    i = attributeName_to_index[x_att]; j = attributeName_to_index[y_att];
+    color = ['r','g', 'b', 'y', 'c', 'm', 'k']
+    for c in range(len(classNames)):
+        idx = y_c == c
+        plt.scatter(x=X_c[idx, i],
+                    y=X_c[idx, j],
+                    c=color[c],
+                    s=50, alpha=0.5,
+                    label=classNames[c])
+    plt.legend()
+    plt.xlabel(attributeNames_c[i])
+    plt.ylabel(attributeNames_c[j])
     plt.show()
 
 # X_c = X.copy();
