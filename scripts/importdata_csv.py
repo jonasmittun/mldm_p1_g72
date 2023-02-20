@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 
 # Load the train csv data using the Pandas library
-filename = '../data/Dry_Bean_Dataset.CSV'
-df = pd.read_csv(filename,sep=";")
+filename = '../data/glass.data'
+df = pd.read_csv(filename,sep=",")
+
+num_of_att = 10
 
 # Replace , with .
 
@@ -19,7 +21,7 @@ df = pd.read_csv(filename,sep=";")
 raw_data = df.values
 
 # Create data matrix
-cols = range(0, 16)
+cols = range(1, num_of_att)
 X = raw_data[:, cols]
 
 # We can extract the attribute names that came from the header of the csv

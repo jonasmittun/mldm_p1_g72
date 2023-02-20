@@ -1,32 +1,25 @@
 from matplotlib import pyplot as plt
 
-from importdata_xls import *
+from importdata_csv import *
+from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel,
+                               xticks, yticks,legend,show)
 
-# Erroneous data
-# sc_w - May contain 0's
 
-# sc_h sc_w m_dep
-
-# touch_screen
-
-# Mean
-# Battery power, clock speed, n_cores, primary camera mega pixels, ram,
-# attributes_to_be_analysed = ['mobile_wt','battery_power','clock_speed','n_cores','int_memory','ram','pc', 'sc_h', 'sc_w', 'm_dep', 'touch_screen']
-attributes_to_be_analysed = ['Area', 'Perimeter', 'MajorAxisLength', 'MinorAxisLength', 'AspectRation', 'Eccentricity', 'ConvexArea', 'EquivDiameter', 'Extent', 'Solidity', 'roundness', 'Compactness', 'ShapeFactor1', 'ShapeFactor2', 'ShapeFactor3', 'ShapeFactor4']
-attributeName_to_index = {}
-for i, att in enumerate(attributeNames):
-    if att in attributes_to_be_analysed:
-        attributeName_to_index[att] = i
-
-print(attributeName_to_index)
-
-# Mean
-summaries = {}
-for att in attributes_to_be_analysed:
-    mean = np.mean(X[:,attributeName_to_index[att]])
-    var = np.var(X[:,attributeName_to_index[att]])
-    sd = np.std(X[:,attributeName_to_index[att]])
-    summaries[att] = (mean, var, sd)
+# attributes_to_be_analysed = ['RI','Na','Mg','Al','Si','K','Ca','Ba','Fe']
+# attributeName_to_index = {}
+# for i, att in enumerate(attributeNames):
+#     if att in attributes_to_be_analysed:
+#         attributeName_to_index[att] = i
+#
+# print(attributeName_to_index)
+#
+# # Mean
+# summaries = {}
+# for att in attributes_to_be_analysed:
+#     mean = np.mean(X[:,attributeName_to_index[att]])
+#     var = np.var(X[:,attributeName_to_index[att]])
+#     sd = np.std(X[:,attributeName_to_index[att]])
+#     summaries[att] = (mean, var, sd)
 
 ## Classification problem
 # The current variables X and y represent a classification problem, in
@@ -44,6 +37,32 @@ for att in attributes_to_be_analysed:
 
 
 
+figure(figsize=(12,10))
+for m1 in range(M):
+    for m2 in range(M):
+        subplot(M, M, m1*M + m2 + 1)
+        for c in range(C):
+            class_mask = (y==c)
+            plot(np.array(X[class_mask,m2]), np.array(X[class_mask,m1]), '.')
+            if m1==M-1:
+                xlabel(attributeNames[m2])
+            else:
+                xticks([])
+            if m2==0:
+                ylabel(attributeNames[m1])
+            else:
+                yticks([])
+            #ylim(0,X.max()*1.1)
+            #xlim(0,X.max()*1.1)
+legend(classNames)
+
+show()
+
+print('Ran Exercise 4.2.5')
+
+
+
+
 
 # for x_att,y_att in plot_pairs:
 #     x_l = X[:,attributeName_to_index[x_att]]
@@ -55,26 +74,26 @@ for att in attributes_to_be_analysed:
 #     plt.ylabel(y_att)
 #     plt.show()
 
-X_c = X.copy();
-y_c = y.copy();
-
-plot_pairs = [('Area','Perimeter'),('AspectRation','roundness'),('Area','roundness')]
-
-attributeNames_c = attributeNames.copy();
-for x_att, y_att in plot_pairs:
-    i = attributeName_to_index[x_att]; j = attributeName_to_index[y_att];
-    color = ['r','g', 'b', 'y', 'c', 'm', 'k']
-    for c in range(len(classNames)):
-        idx = y_c == c
-        plt.scatter(x=X_c[idx, i],
-                    y=X_c[idx, j],
-                    c=color[c],
-                    s=50, alpha=0.5,
-                    label=classNames[c])
-    plt.legend()
-    plt.xlabel(attributeNames_c[i])
-    plt.ylabel(attributeNames_c[j])
-    plt.show()
+# X_c = X.copy();
+# y_c = y.copy();
+#
+# plot_pairs = zip()
+#
+# attributeNames_c = attributeNames.copy();
+# for x_att, y_att in plot_pairs:
+#     i = attributeName_to_index[x_att]; j = attributeName_to_index[y_att];
+#     color = ['r','g', 'b', 'y', 'c', 'm', 'k']
+#     for c in range(len(classNames)):
+#         idx = y_c == c
+#         plt.scatter(x=X_c[idx, i],
+#                     y=X_c[idx, j],
+#                     c=color[c],
+#                     s=50, alpha=0.5,
+#                     label=classNames[c])
+#     plt.legend()
+#     plt.xlabel(attributeNames_c[i])
+#     plt.ylabel(attributeNames_c[j])
+#     plt.show()
 
 # X_c = X.copy();
 # y_c = y.copy();

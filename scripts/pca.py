@@ -1,4 +1,4 @@
-from importdata_xls import *
+from importdata_csv import *
 
 
 
@@ -47,8 +47,8 @@ Ys = [Y2]
 titles = ['Zero-mean', 'Zero-mean and unit variance']
 threshold = 0.9
 # Choose two PCs to plot (the projection)
-i = 1
-j = 2
+i = 0
+j = 1
 
 # Make the plot
 plt.figure(figsize=(10, 15))
@@ -74,10 +74,10 @@ Z = U * S;
 plt.subplot(nrows, ncols, 1)
 C = len(classNames)
 for c in range(C):
-    plt.plot(Z[y == c, i], Z[y == c, j], '.', alpha=.5)
-plt.xlabel('PC' + str(i + 1))
-plt.ylabel('PC' + str(j + 1))
-plt.title(titles[0] + '\n' + 'Projection')
+    plt.plot(Z[(y==c), i], Z[(y==c), j], '.', alpha=.5)
+    plt.xlabel('PC' + str(i + 1))
+    plt.ylabel('PC' + str(j + 1))
+    plt.title(titles[0] + '\n' + 'Projection')
 plt.legend(classNames)
 plt.axis('equal')
 
