@@ -18,7 +18,8 @@ Types include:
   2. WNF (Non-float Window)
   3. C (Container)
   4. T (Tableware)
-  5. H (Headlamp)     214    2568   14127 glass.dat
+  5. H (Headlamp)
+     214    2568   14127 glass.dat
       19      92     518 glass.tag
       62     742    4775 glassx.dat
       51     610    3928 nonwindo.dat

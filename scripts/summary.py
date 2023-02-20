@@ -1,68 +1,80 @@
+import numpy as np
 from matplotlib import pyplot as plt
 
 from importdata_csv import *
-from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel,
-                               xticks, yticks,legend,show)
+from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel, scatter,
+                               xticks, yticks, legend, show, hist, title, subplots_adjust, savefig)
+
+# Dictionary of indices of attributes #
+attributes_to_be_analysed = ['RI', 'Na', 'Mg', 'Al', 'Si', 'K', 'Ca', 'Ba', 'Fe']
+attributeName_to_index = {}
+for i, att in enumerate(attributeNames):
+    if att in attributes_to_be_analysed:
+        attributeName_to_index[att] = i
+
+print(attributeName_to_index)
+
+# Compute mean, variance and standard deviation #
+summaries = {}
+for att in attributes_to_be_analysed:
+    minn = np.min(X[:, attributeName_to_index[att]])
+    maxx = np.max(X[:, attributeName_to_index[att]])
+    mean = np.mean(X[:, attributeName_to_index[att]])
+    sd = np.std(X[:, attributeName_to_index[att]])
+    summaries[att] = (att, minn, maxx, mean, sd)
 
 
-# attributes_to_be_analysed = ['RI','Na','Mg','Al','Si','K','Ca','Ba','Fe']
-# attributeName_to_index = {}
-# for i, att in enumerate(attributeNames):
-#     if att in attributes_to_be_analysed:
-#         attributeName_to_index[att] = i
-#
-# print(attributeName_to_index)
-#
-# # Mean
-# summaries = {}
-# for att in attributes_to_be_analysed:
-#     mean = np.mean(X[:,attributeName_to_index[att]])
-#     var = np.var(X[:,attributeName_to_index[att]])
-#     sd = np.std(X[:,attributeName_to_index[att]])
-#     summaries[att] = (mean, var, sd)
-
-## Classification problem
-# The current variables X and y represent a classification problem, in
-# which a machine learning model will use the sepal and petal dimesions
-# (stored in the matrix X) to predict the class (species of Iris, stored in
-# the variable y). A relevant figure for this classification problem could
-# for instance be one that shows how the classes are distributed based on
-# two attributes in matrix X:
-
-# Sus constellation
-# x_att = 'mobile_wt'
-# y_att = 'm_dep'
-
-# plot_pairs = [('ram','pc'),('mobile_wt','battery_power'),('n_cores','ram')]
+def summaryToLatexTable(summary):
+    # print(summary)
+    for att in summary:
+        stats = summary[att]
+        print("{0} & {1} & {2} & {3} & {4} \\\\\\hline".format(stats[0],
+                                                               round(stats[1], 4),
+                                                               round(stats[2], 4),
+                                                               round(stats[3], 4),
+                                                               round(stats[4], 4)))
 
 
+print(summaries)
+summaryToLatexTable(summaries)
 
-figure(figsize=(12,10))
+# Covariance and correlation coefficient matrices as recommended in the exercise 3 text
+cov = np.cov(X.T)  # We transpose since the functions assume rows are variables, not columns like in our case
+corr = np.corrcoef(X.T)
+
+# ## Plot histograms ## Written by Tobias, sorry for bad code
+figure(figsize=(12, 10))
+for att in attributes_to_be_analysed:
+    subplot(3, 3, attributeName_to_index[att] + 1)
+    hist(X[:, attributeName_to_index[att]], bins=12)
+    title(att)
+    subplots_adjust(hspace=0.5, wspace=0.5)
+
+# Plot all attributes against each other ##
+figure(figsize=(12, 10))
 for m1 in range(M):
     for m2 in range(M):
-        subplot(M, M, m1*M + m2 + 1)
+        subplot(M, M, m1 * M + m2 + 1)
         for c in range(C):
-            class_mask = (y==c)
-            plot(np.array(X[class_mask,m2]), np.array(X[class_mask,m1]), '.')
-            if m1==M-1:
+            class_mask = (y == c)
+            scatter(np.array(X[class_mask, m2]), np.array(X[class_mask, m1]), s=5, marker='.')
+            if m1 == M - 1:
                 xlabel(attributeNames[m2])
             else:
                 xticks([])
-            if m2==0:
+            if m2 == 0:
                 ylabel(attributeNames[m1])
             else:
                 yticks([])
-            #ylim(0,X.max()*1.1)
-            #xlim(0,X.max()*1.1)
+            # ylim(0,X.max()*1.1)
+            # xlim(0,X.max()*1.1)
 legend(classNames)
+
+savefig("scatter-plot-matrix.svg", format='svg')
 
 show()
 
 print('Ran Exercise 4.2.5')
-
-
-
-
 
 # for x_att,y_att in plot_pairs:
 #     x_l = X[:,attributeName_to_index[x_att]]
@@ -114,14 +126,12 @@ print('Ran Exercise 4.2.5')
 # plt.ylabel(attributeNames_c[j])
 # plt.show()
 
-#plt.figure("box_outliers")
-#plt.boxplot(X[:,attributeName_to_index['battery_power']])
-#plt.show()
-
+# plt.figure("box_outliers")
+# plt.boxplot(X[:,attributeName_to_index['battery_power']])
+# plt.show()
 
 
 #  Are there issues with outliers in the data,
 #  do the attributes appear to be normal distributed,
 #  are variables correlated,
 #  does the primary machine learning modeling aim appear to be feasible based on your visualizations.
-

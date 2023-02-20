@@ -4,18 +4,9 @@ import pandas as pd
 
 # Load the train csv data using the Pandas library
 filename = '../data/glass.data'
-df = pd.read_csv(filename,sep=",")
+df = pd.read_csv(filename, sep=",")
 
 num_of_att = 10
-
-# Replace , with .
-
-# print(df.get('Area'))
-# df.Area = df.Area.str.replace(",", '.')
-# df.AspectRation = df.AspectRation.str.replace(",", '.')
-# df.Compactness = df.Compactness.str.replace(",", '.')
-# df.ConvexArea = df.ConvexArea.str.replace(",", '.')
-
 
 # Convert pandas dataframe to numpy array
 raw_data = df.values
