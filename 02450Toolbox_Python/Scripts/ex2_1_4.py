@@ -16,6 +16,9 @@ V = Vh.T
 
 # Project the centered data onto principal component space
 Z = Y @ V
+Z2 = U * S
+
+
 
 # Indices of the principal components to be plotted
 i = 0

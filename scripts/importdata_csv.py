@@ -20,9 +20,11 @@ attributeNames = np.asarray(df.columns[cols])
 
 # Extract labels from csvx
 classLabels = raw_data[:, -1]  # -1 takes the last column
+classLabels[classLabels == 3] = 1
+classLabels[classLabels > 4] = 3
+# print(classLabels, 'Num Observations', len(classLabels))
 
 # Determine unique
-# 0, 1, 2, 3 denotes price ranges
 classNames = np.unique(classLabels)
 
 # Create dictionary
@@ -36,3 +38,6 @@ N, M = X.shape
 
 # Number of classes
 C = len(classNames)
+
+# Defining class colors
+class_colors = ['#8dddd0', 'darkgreen', '#ca472f']
