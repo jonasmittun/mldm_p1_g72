@@ -1,9 +1,9 @@
 from matplotlib import pyplot as plt
 
 from importdata_csv import *
-from matplotlib.pyplot import (figure, subplot, plot, xlabel, ylabel,
+from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
                                xticks, yticks, legend, show, hist, title,
-                               subplots_adjust, scatter, savefig, suptitle)
+                               subplots_adjust, scatter, savefig)
 
 # Compute basic summary statistics
 summaries = {}
@@ -27,19 +27,6 @@ show()
 SX = X - np.ones((N, 1)) * X.mean(0)
 SX = SX * (1 / np.std(SX, 0))
 
-## Removes the potassium "outliers"
-# outlier_mask = (SX[:, 5] > 8)
-# valid_mask = np.logical_not(outlier_mask)
-#
-# # Finally we will remove these from the data set
-# X = X[valid_mask, :]
-# y = y[valid_mask]
-# N = len(y)
-#
-# SX = X - np.ones((N, 1)) * X.mean(0)
-# SX = SX * (1 / np.std(SX, 0))
-
-
 # Attribute scatter plot (box style)
 figure(figsize=(9, 6))
 for i, att in enumerate(attributeNames):
@@ -56,7 +43,6 @@ show()
 
 # Matrix scatter plot of attributes
 r_mask = np.ones(N, dtype=bool)
-# r_mask = np.random.uniform(size=N) < 0.1
 figure(figsize=(12, 10))
 for m1 in range(M):
     for m2 in range(M):
@@ -74,10 +60,7 @@ for m1 in range(M):
                 ylabel(attributeNames[m1])
             else:
                 yticks([])
-            # ylim(0,X.max()*1.1)
-            # xlim(0,X.max()*1.1)
 subplot(M, M, 1).legend(classNames, bbox_to_anchor=(2, 2.3), loc='upper right')
 plt.suptitle('Attribute scatter plot matrix', fontsize=14)
-# Show all figures
-savefig("../plots/spm-050alpha.svg", bbox_inches='tight')
-# show()
+# savefig("../plots/spm-050alpha.svg", bbox_inches='tight')
+show()

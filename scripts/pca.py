@@ -54,7 +54,6 @@ NoPC = 3
 
 # Plot the projected scatter matrix
 r_mask = np.ones(N, dtype=bool)
-# r_mask = np.random.uniform(size=N) < 0.33
 plt.figure(figsize=(15, 10))
 C = len(classNames)
 for i in range(NoPC):
@@ -72,7 +71,6 @@ for i in range(NoPC):
                     plt.xlabel('PC' + str(j + 1))
                 else:
                     plt.xticks([])
-            # plt.title(titles + '\n' + 'Projection')
 plt.subplot(NoPC, NoPC, 5).legend(classNames, bbox_to_anchor=(1.5, 0.5), loc="center left")
 plt.suptitle('Observations projected on PC1, PC2 and PC3 in pairs', fontsize=14)
 plt.savefig("../plots/pcspm.svg", bbox_inches='tight')
