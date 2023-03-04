@@ -22,22 +22,41 @@ attributeNames = np.asarray(df.columns[cols])
 classLabels = raw_data[:, -1]  # -1 takes the last column
 classLabels[classLabels == 3] = 1
 classLabels[classLabels > 4] = 3
+newClassNames = ["float window", "non-float window","non-window"]
+newClassLabels = [0 for _ in classLabels]
+for i in range(len(classLabels)):
+    newClassLabels[i] = newClassNames[int(classLabels[i])-1]
+
 # print(classLabels, 'Num Observations', len(classLabels))
 
 # Determine unique
-classNames = np.unique(classLabels)
+classNames = np.unique(newClassLabels)
 
 # Create dictionary
 classDict = dict(zip(classNames, range(len(classNames))))
 
+
 # Add to dictionary
-y = np.array([classDict[cl] for cl in classLabels])
+y = np.array([classDict[cl] for cl in newClassLabels])
 
 # Get data objects and attributes from X dimensions
 N, M = X.shape
 
 # Number of classes
 C = len(classNames)
+
+## Removes the potassium "outliers"
+# SX = X - np.ones((N, 1)) * X.mean(0)
+# SX = SX * (1 / np.std(SX, 0))
+
+# outlier_mask = (SX[:, 5] > 8)
+# valid_mask = np.logical_not(outlier_mask)
+#
+# # Finally we will remove these from the data set
+# X = X[valid_mask, :]
+# y = y[valid_mask]
+# N = len(y)
+
 
 # Defining class colors
 class_colors = ['#8dddd0', 'darkgreen', '#ca472f']
