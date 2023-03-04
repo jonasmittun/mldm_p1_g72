@@ -39,7 +39,6 @@ NoPC = 6
 plt.figure(figsize=(10, 15))
 pcs = np.arange(NoPC)
 legendStrs = ['PC'+str(e+1) for e in pcs]
-# c = ['r', 'g', 'b', 'c', 'k', 'y']
 bw = 0.1
 r = np.arange(1, M+1)
 for i in pcs:
@@ -61,19 +60,20 @@ C = len(classNames)
 for i in range(NoPC):
     for j in range(NoPC):
         for c in range(C):
-            class_mask = (y == c) & r_mask
-            plt.subplot(NoPC, NoPC, NoPC*i+j+1)
-            plt.scatter(Z[class_mask, j], Z[class_mask, i], s=4, c=class_colors[c])
-            if j == 0:
-                plt.ylabel('PC' + str(i + 1))
-            else:
-                plt.yticks([])
-            if i == NoPC-1:
-                plt.xlabel('PC' + str(j + 1))
-            else:
-                plt.xticks([])
+            if i>=j: # Include only below the diagonal
+                class_mask = (y == c) & r_mask
+                plt.subplot(NoPC, NoPC, NoPC*i+j+1)
+                plt.scatter(Z[class_mask, j], Z[class_mask, i], s=7, c=class_colors[c],alpha=0.5)
+                if j == 0:
+                    plt.ylabel('PC' + str(i + 1))
+                else:
+                    plt.yticks([])
+                if i == NoPC-1:
+                    plt.xlabel('PC' + str(j + 1))
+                else:
+                    plt.xticks([])
             # plt.title(titles + '\n' + 'Projection')
-plt.legend(classNames, bbox_to_anchor=(1.04, 0.5), loc="center left")
-# plt.axis('equal')
-
+plt.subplot(NoPC, NoPC, 5).legend(classNames, bbox_to_anchor=(1.5, 0.5), loc="center left")
+plt.suptitle('Observations projected on PC1, PC2 and PC3 in pairs', fontsize=14)
+plt.savefig("../plots/pcspm.svg", bbox_inches='tight')
 plt.show()
