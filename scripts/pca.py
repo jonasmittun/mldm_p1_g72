@@ -1,6 +1,6 @@
 ## Author: Group 72
 
-from importdata_csv import *
+from classification_importdata import *
 import matplotlib.pyplot as plt
 from scipy.linalg import svd
 
