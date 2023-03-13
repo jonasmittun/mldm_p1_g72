@@ -1,6 +1,9 @@
+## Author: Group 72
+
 # Import data part of project 1 - based on code from the following files: exercise 1.5.1
 import numpy as np
 import pandas as pd
+from matplotlib.pyplot import figure, hist, xlabel, ylabel, title, show
 
 # Load the train csv data using the Pandas library
 filename = '../data/glass.data'
@@ -17,6 +20,14 @@ X = raw_data[:, cols]
 
 # We can extract the attribute names that came from the header of the csv
 attributeNames = np.asarray(df.columns[cols])
+
+# Class label histogram
+figure()
+hist(raw_data[:,-1], bins=[0.5 + i for i in range(8)])
+title("Histogram of classes")
+xlabel("Classes")
+ylabel("Number of occurences")
+show()
 
 # Extract labels from csvx
 classLabels = raw_data[:, -1]  # -1 takes the last column

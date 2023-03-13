@@ -1,3 +1,5 @@
+## Author: Group 72
+
 from matplotlib import pyplot as plt
 
 from importdata_csv import *
@@ -22,6 +24,17 @@ for i,att in enumerate(attributeNames):
     title(att)
     subplots_adjust(hspace=0.5, wspace=0.5)
 show()
+
+
+# Histogram over classes
+figure(figsize=(12, 10))
+for i,att in enumerate(attributeNames):
+    subplot(3, 3, i+1)
+    hist(X[:, i], bins=30)
+    title(att)
+    subplots_adjust(hspace=0.5, wspace=0.5)
+show()
+
 
 # Normalize data
 SX = X - np.ones((N, 1)) * X.mean(0)

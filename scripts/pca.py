@@ -1,3 +1,5 @@
+## Author: Group 72
+
 from importdata_csv import *
 import matplotlib.pyplot as plt
 from scipy.linalg import svd
