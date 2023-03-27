@@ -16,8 +16,8 @@ raw_data = df.values
 
 
 # Create data matrix
-cols = range(1, num_of_att)
-X = raw_data[:, range(2,10)]
+cols = range(2, 10)
+X = raw_data[:, cols]
 
 # Add to dictionary
 y = raw_data[:, 1]
