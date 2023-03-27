@@ -1,12 +1,7 @@
-
-import sklearn.linear_model as lm
-# Cross validation for the classification models
-import numpy as np
-from matplotlib.pyplot import scatter, plot
+import torch
 from numpy import argmin
 
 from regression_importdata import *
-
 from sklearn import model_selection
 
 K1 = 5
@@ -18,8 +13,8 @@ EgenS = np.zeros(len(models))
 Etest = np.zeros(K1)
 
 
-CVOuter = model_selection.KFold(n_splits=K1,shuffle=True)
-CVInner = model_selection.KFold(n_splits=K2,shuffle=True)
+CVOuter = model_selection.KFold(n_splits=K1, shuffle=True)
+CVInner = model_selection.KFold(n_splits=K2, shuffle=True)
 i = 0
 
 
@@ -48,20 +43,52 @@ for par_index, test_index in CVOuter.split(X):
             Eval[s,j] = np.square(y_val-fitted_model.predict(X_val)).sum()/y_val.shape[0]# validationError(X[val_index,:],y[val_index],fittedmodel) # Validation error
 
         j += 1
-    # For each s compute generalization error
-    for s, _ in enumerate(models):
+    # Select ANN* - For each s compute generalization error
+    for s, _ in enumerate(hs):
         runningSum = 0
         for j in range(K2):
-            runningSum += (sizeDval[j]/sum(par_index)) * Eval[s,j]
+            runningSum += (sizeDval[j]/sum(par_index)) * Eval[s, j]
         EgenS[s] = runningSum
     # Select optimal model M*
     index_opt = argmin(EgenS)
-    model_opt = models[index_opt]
+    h_opt = hs[index_opt]
 
-    # Train model on X[par_index,:]
-    fitted_model_opt = model_opt.fit(X[par_index,:],y[par_index])
-    # Compute Etest_i
-    Etest_i = np.square(y_test-fitted_model_opt.predict(X_test)).sum()/y_test.shape[0]#validationError(X[test_index,:],y[test_index], fitted_model_opt) # Something
+    # Baseline
+    baseline = y_par.mean()
+    Error_test_baseline = np.square(y_test - baseline).sum(axis=0)/y_test.shape[0]
+
+    # RLR - Here the optimal value of lambda is found.
+    opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_intercept[par_index, :], y[par_index], lambdas, K2)
+    index_lambda_opt = np.where(lambdas == opt_lambda)
+    rlr_opt = mean_w_vs_lambda[:, index_lambda_opt]
+
+    # Train ANN on D_Par
+    net, _, _ = train_neural_net(ann_model(h_opt), loss_fn, X=torch.Tensor(X_par), y=torch.Tensor(y_par).unsqueeze(1), n_replicates=1, max_iter=max_iter)
+
+    y_val_est = net(X_val).squeeze()
+    se = (y_val_est.float() - y_val.float()) ** 2  # squared error
+    mse = (sum(se).type(torch.float) / len(y_val)).data.numpy()  # mean
+    Error_test_ann = mse
+
+    # Train RLR on D_par:
+    # Set up variables in order to train the RLR model
+    rlr_X_test = X_intercept[test_index, :]
+    rlr_X_par = X_intercept[par_index, :]
+    mu = np.mean(rlr_X_par[:, 1:], 0)
+    sigma = np.std(rlr_X_par[:, 1:], 0)
+    rlr_X_par[:, 1:] = (rlr_X_par[:, 1:] - mu) / sigma
+    rlr_X_test[:, 1:] = (rlr_X_test[:, 1:] - mu) / sigma
+    Xty = rlr_X_par.T @ y_par
+    XtX = rlr_X_par.T @ rlr_X_par
+    # Train the RLR model on X[par_index, :]
+    lambdaI = opt_lambda * np.eye(M+1)
+    lambdaI[0, 0] = 0  # Do no regularize the bias term
+    w_rlr = np.linalg.solve(XtX+lambdaI, Xty).squeeze()
+    # Make predictions on test data
+    rlr_y_est = rlr_X_test @ w_rlr
+    # Compute error
+    Error_test_rlr = np.square(y_test - rlr_y_est).sum(axis=0)/y_test.shape[0]
+
 
     # Estimate generalization error on the fly
     Egen += (sum(test_index)/N) * Etest_i
