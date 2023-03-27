@@ -4,19 +4,19 @@ from numpy import argmin
 from regression_importdata import *
 from sklearn import model_selection
 
-K1 = 5
-K2 = 5
-models = [lm.LinearRegression(fit_intercept=True),lm.LinearRegression(fit_intercept=False)] # Models
+K1 = 2
+K2 = 2
+
+baseline = y.mean()
+
+# models = [lm.LinearRegression(fit_intercept=True), lm.LinearRegression(fit_intercept=False)] # Models
+
 # models_control_parameters = [range()]
-Eval = np.zeros((len(models),K2))
-EgenS = np.zeros(len(models))
-Etest = np.zeros(K1)
 
 
 CVOuter = model_selection.KFold(n_splits=K1, shuffle=True)
 CVInner = model_selection.KFold(n_splits=K2, shuffle=True)
 i = 0
-
 
 def validationError(X, y, model):
     distance_function = lambda yt, xt: (yt-model.predict(xt))**2
@@ -30,6 +30,7 @@ def validationError(X, y, model):
 sizeDval = np.zeros(K2)
 
 Egen = 0
+print("{}\t{}\t{}\t{}\t{}\t{}".format('fold i','h*','error','lambda*','error','Baseline error'))
 for par_index, test_index in CVOuter.split(X):
     j = 0
     X_test, y_test = X[test_index, :], y[test_index]
@@ -91,25 +92,26 @@ for par_index, test_index in CVOuter.split(X):
 
 
     # Estimate generalization error on the fly
-    Egen += (sum(test_index)/N) * Etest_i
+    # Egen += (sum(test_index)/N) * Etest_i
+    print("{}\t{}\t{}\t{}\t{}\t{}".format(i, h_opt, Error_test_ann, opt_lambda, Error_test_rlr, Error_test_baseline))
     i += 1
 
 
-y_hat = fitted_model_opt.predict(X)
-
-fig = figure()
-scatter(y_hat,y)
-xlabel("Predicted values")
-ylabel("True values")
-show()
-
-fig = figure()
-residuals = y-y_hat
-plot(residuals, '.')
-xlabel("Observations")
-ylabel("Residual (y - y_hat)")
-show()
-
-fig = figure()
-hist(residuals, bins=41)
-show()
+# y_hat = fitted_model_opt.predict(X)
+#
+# fig = figure()
+# scatter(y_hat,y)
+# xlabel("Predicted values")
+# ylabel("True values")
+# show()
+#
+# fig = figure()
+# residuals = y-y_hat
+# plot(residuals, '.')
+# xlabel("Observations")
+# ylabel("Residual (y - y_hat)")
+# show()
+#
+# fig = figure()
+# hist(residuals, bins=41)
+# show()
