@@ -23,7 +23,7 @@ attributeNames = np.asarray(df.columns[cols])
 
 # Class label histogram
 figure()
-hist(raw_data[:,-1], bins=[0.5 + i for i in range(8)])
+hist(raw_data[:, -1], bins=[0.5 + i for i in range(8)])
 title("Histogram of classes")
 xlabel("Classes")
 ylabel("Number of occurences")
