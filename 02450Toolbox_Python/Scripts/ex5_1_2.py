@@ -19,9 +19,9 @@ dtc = dtc.fit(X, y)
 # to get a readable plot. Hint: Try to maximize the figure after it displays.
 fname='tree_ex512_' + criterion + '.png'
 
-fig = plt.figure(figsize=(4,4),dpi=100) 
-_ = tree.plot_tree(dtc, filled=False,feature_names=attributeNames)
-plt.savefig(fname)
+fig = plt.figure(figsize=(4, 4), dpi=100)
+_ = tree.plot_tree(dtc, filled=False, feature_names=attributeNames)
+#plt.savefig(fname)
 plt.show()
 
 print('Ran Exercise 5.1.2')

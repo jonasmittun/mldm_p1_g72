@@ -26,7 +26,7 @@ misclass_rate = np.sum(y_est != y) / float(len(y_est))
 print('\nProbability of given sample being a white wine: {0:.4f}'.format(x_class))
 print('\nOverall misclassification rate: {0:.3f}'.format(misclass_rate))
 
-f = figure();
+f = figure()
 class0_ids = np.nonzero(y==0)[0].tolist()
 plot(class0_ids, y_est_white_prob[class0_ids], '.y')
 class1_ids = np.nonzero(y==1)[0].tolist()

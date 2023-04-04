@@ -36,6 +36,12 @@ for i,att in enumerate(attributeNames):
 show()
 
 
+figure()
+hist(raw_data[:,-1], bins=[0.5 + i for i in range(8)])
+title("Histogram of classes")
+xlabel("Classes")
+ylabel("Occurences")
+
 # Normalize data
 SX = X - np.ones((N, 1)) * X.mean(0)
 SX = SX * (1 / np.std(SX, 0))

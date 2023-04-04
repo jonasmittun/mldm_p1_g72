@@ -7,17 +7,18 @@ from ex5_1_5 import *
 
 # Split dataset into features and target vector
 alcohol_idx = attributeNames.index('Alcohol')
-y = X[:,alcohol_idx]
+y = X[:, alcohol_idx]
 
-X_cols = list(range(0,alcohol_idx)) + list(range(alcohol_idx+1,len(attributeNames)))
-X = X[:,X_cols]
+X_cols = list(range(0, alcohol_idx)) + list(range(alcohol_idx+1, len(attributeNames)))
+X = X[:, X_cols]
 
 # Fit ordinary least squares regression model
 model = lm.LinearRegression()
-model.fit(X,y)
+model.fit(X, y)
 
 # Predict alcohol content
 y_est = model.predict(X)
+print(model.coef_)
 residual = y_est-y
 
 # Display scatter plot

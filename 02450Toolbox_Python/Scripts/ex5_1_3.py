@@ -13,7 +13,7 @@ from matplotlib.image import imread
 from ex5_1_1 import *
 
 # Fit regression tree classifier, Gini split criterion, no pruning
-criterion='gini'
+criterion = 'entropy'
 # dtc = tree.DecisionTreeClassifier(criterion=criterion, min_samples_split=2)
 dtc = tree.DecisionTreeClassifier(criterion=criterion, min_samples_split=1.0/N)
 dtc = dtc.fit(X,y)
