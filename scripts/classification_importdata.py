@@ -58,7 +58,11 @@ y = classLabels  # np.array([classDict[cl] for cl in newClassLabels])
 N, M = X.shape
 
 # Number of classes
-C = len(classNames)
+# C = len(classNames)
+
+# Standardization
+X = X - np.ones((N, 1)) * X.mean(0)
+X = X * (1 / np.std(X, 0))
 
 # Defining class colors
 class_colors = ['#8dddd0', 'darkgreen', '#ca472f']
