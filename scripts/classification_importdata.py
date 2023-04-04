@@ -31,23 +31,28 @@ show()
 
 # Extract labels from csvx
 classLabels = raw_data[:, -1]  # -1 takes the last column
-classLabels[classLabels == 3] = 1
-classLabels[classLabels > 4] = 3
+classLabels[classLabels == 1] = 0
+classLabels[classLabels == 2] = 1
+classLabels[classLabels == 3] = 0
+classLabels[classLabels == 4] = 1
+classLabels[classLabels == 5] = 2
+classLabels[classLabels == 6] = 2
+classLabels[classLabels == 7] = 2
 
 # Translate class numbers to class label names
-newClassNames = ["float window", "non-float window","non-window"]
-newClassLabels = [0 for _ in classLabels]
-for i in range(len(classLabels)):
-    newClassLabels[i] = newClassNames[int(classLabels[i])-1]
-
-# Determine unique
-classNames = np.unique(newClassLabels)
-
-# Create dictionary
-classDict = dict(zip(classNames, range(len(classNames))))
+# newClassNames = ["float window", "non-float window","non-window"]
+# newClassLabels = [0 for _ in classLabels]
+# for i in range(len(classLabels)):
+#     newClassLabels[i] = newClassNames[int(classLabels[i])-1]
+#
+# # Determine unique
+# classNames = np.unique(newClassLabels)
+#
+# # Create dictionary
+# classDict = dict(zip(classNames, range(len(classNames))))
 
 # Add to dictionary
-y = np.array([classDict[cl] for cl in newClassLabels])
+y = classLabels  # np.array([classDict[cl] for cl in newClassLabels])
 
 # Get data objects and attributes from X dimensions
 N, M = X.shape
