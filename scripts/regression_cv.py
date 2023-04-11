@@ -9,9 +9,9 @@ import scipy.stats as st
 K1 = 10  # Outer fold
 K2 = 10  # Inner fold
 lambdas = np.power(10., np.arange(-3, 2, 0.1))  # Regularization factors in RLR
-hs = [i for i in range(1, 10)]  # Number of hidden units in ANN
+hs = [i for i in range(1, 5)]  # Number of hidden units in ANN
 NR = 1  # Number of iterations when training ANN
-max_iter = 1000  # Maximum number of iterations when training ANN model.
+max_iter = 10000  # Maximum number of iterations when training ANN model.
 
 # Old code - perhaps delete later
 # models = [lm.LinearRegression(fit_intercept=True), lm.LinearRegression(fit_intercept=False)] # Models
@@ -75,7 +75,7 @@ for par_index, test_index in CVOuter.split(X):
 
         # Loop over the complexity parameter for the ANN model (number of hidden units)
         for s, h in enumerate(hs):
-            # Train model
+            # Train model ###### TODO Use pytorch directly
             net, final_loss, learning_curve = train_neural_net(ann_model(h),
                                                                loss_fn,
                                                                X=X_train,
