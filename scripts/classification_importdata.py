@@ -27,7 +27,7 @@ hist(raw_data[:, -1], bins=[0.5 + i for i in range(8)])
 title("Histogram of classes")
 xlabel("Classes")
 ylabel("Number of occurences")
-show()
+# show()
 
 # Extract labels from csvx
 classLabels = raw_data[:, -1]  # -1 takes the last column
