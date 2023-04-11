@@ -84,7 +84,7 @@ for par_index, test_index in CVOuter.split(X):
         y_train = y_par[train_index]
         X_val = X_par[val_index, :]
         y_val = y_par[val_index]
-        sizeDval_KNN[j] = sum(val_index)
+        sizeDval_KNN[j] = len(val_index)
 
         # Array containing test performance for classifiers
         dy = []
@@ -106,7 +106,7 @@ for par_index, test_index in CVOuter.split(X):
     for s, _ in enumerate(ks):
         runningSum = 0
         for k in range(K2):
-            runningSum += (sizeDval_KNN[k] / sum(par_index)) * Eval_KNN[s, k]
+            runningSum += (sizeDval_KNN[k] / len(par_index)) * Eval_KNN[s, k]
         EgenS[s] = runningSum
     # Select optimal model M*
     index_opt = argmin(EgenS)
@@ -127,7 +127,7 @@ for par_index, test_index in CVOuter.split(X):
     EgenS = np.zeros(len(lambdas))
     for train_index, val_index in CVInner.split(X_par):
         # Split parameter data into training data and validation data
-        sizeDval_RMR[k] = sum(val_index)
+        sizeDval_RMR[k] = len(val_index)
         X_train, y_train = X_par[train_index, :], y_par[train_index]
         X_val, y_val = X_par[val_index, :], y_par[val_index]
 
@@ -150,7 +150,7 @@ for par_index, test_index in CVOuter.split(X):
     for s, _ in enumerate(lambdas):
         runningSum = 0
         for k in range(K2):
-            runningSum += (sizeDval_RMR[k] / sum(par_index)) * Eval_RMR[s, k]
+            runningSum += (sizeDval_RMR[k] / len(par_index)) * Eval_RMR[s, k]
         EgenS[s] = runningSum
     # Select optimal model M*
     index_opt = argmin(EgenS)
