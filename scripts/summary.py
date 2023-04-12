@@ -2,11 +2,12 @@
 
 from matplotlib import pyplot as plt
 
-from importdata_classification import *
+from classification_importdata import *
 from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
                                xticks, yticks, legend, show, hist, title,
                                subplots_adjust, scatter, savefig)
 
+X = X_original
 # Compute basic summary statistics
 summaries = {}
 for i,att in enumerate(attributeNames):
