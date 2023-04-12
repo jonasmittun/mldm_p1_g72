@@ -8,6 +8,10 @@ from sklearn import model_selection
 from sklearn.neighbors import KNeighborsClassifier
 import sklearn.linear_model as lm
 from toolbox_02450 import mcnemar
+from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
+                               xticks, yticks, legend, show, hist, title,
+                               subplots_adjust, scatter, savefig,suptitle)
+
 
 # Parameters
 K1 = 10  # Outer fold
@@ -73,7 +77,6 @@ for par_index, test_index in CVOuter.split(X):
     # metric_params={'V': cov(X_train, rowvar=False)}
     Eval_KNN = np.zeros((len(ks), K2))
 
-    CV = model_selection.LeaveOneOut()
     j = 0  # KNN inner loop
     sizeDval_KNN = np.zeros(K2)
     Eval = np.zeros((len(ks), K2))
@@ -205,6 +208,43 @@ alpha = 0.05
 [thetahatAC, CIAC, pAC] = mcnemar(Y_TRUE, KNN_hats, BASE_hats, alpha=alpha)
 # Compare model B and C (RMR against BASE)
 [thetahatBC, CIBC, pBC] = mcnemar(Y_TRUE, RMR_hats, BASE_hats, alpha=alpha)
+
+
+# Plot KNN class labels
+# Matrix scatter plot of attributes
+def matrix_scatter_plot(attributes, prediction, modelname):
+    r_mask = np.ones(N, dtype=bool)
+    figure(figsize=(12, 10))
+    m = sum(attributes)
+    for m1 in range(m):
+        for m2 in range(m):
+            subplot(m, m, m1*m + m2 + 1)
+            for c in range(C):
+                class_mask = ((prediction == c) & r_mask)
+                scatter(np.array(X_original[class_mask, m2]), np.array(X_original[class_mask, m1]), marker='.', s=8*(10-m), c=class_colors[c], alpha=0.50)
+                if m1 == m-1:
+                    xticks(fontsize=7)
+                    xlabel(attributeNames[m2])
+                else:
+                    xticks([])
+                if m2 == 0:
+                    yticks(fontsize=7)
+                    ylabel(attributeNames[m1])
+                else:
+                    yticks([])
+    subplot(m, m, 1).legend(classNames, bbox_to_anchor=(2, 2.3), loc='upper right')
+    suptitle('Attribute scatter plot matrix', fontsize=14)
+    savefig("../plots/spm-{}-est.svg".format(modelname), bbox_inches='tight')
+    # show()
+
+# att = [1 for _ in range(M)]
+att = [1,0,0,1,0,1,0,0,1]
+all_att = np.arange(M)
+masked = all_att[att]
+matrix_scatter_plot(masked, y, "true")
+matrix_scatter_plot(masked, KNN_hats, "knn")
+matrix_scatter_plot(masked, RMR_hats, "rmr")
+matrix_scatter_plot(masked, BASE_hats, "base")
 
 # print("The A-B confidence interval:", CIAB)
 # print("The A-B p-value:", pAB)
