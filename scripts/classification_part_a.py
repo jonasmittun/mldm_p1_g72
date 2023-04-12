@@ -18,6 +18,23 @@ from classification_importdata import *
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
 K = 10
+
+def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_train):
+    EgenS = np.zeros(len(complexity))
+    EgenS_train = np.zeros(len(complexity))
+    for s, _ in enumerate(complexity):
+        runningSum = 0
+        runningSum_train = 0
+        for k in range(K):
+            runningSum += (size_val[k] / N) * eval_error[s, k]
+            runningSum_train += (size_train[k] / sum(size_train)) * train_error[s, k]
+        EgenS[s] = runningSum
+        EgenS_train[s] = runningSum_train
+    index_opt = np.argmin(EgenS)
+    complexity_opt = complexity[index_opt]  # The optimal number of neighbors
+    return complexity_opt, EgenS, EgenS_train
+
+
 CV = model_selection.KFold(n_splits=K, shuffle=True)
 # Values of lambda
 lambdas = np.power(10., np.arange(-3, 2, 0.05))
@@ -50,22 +67,13 @@ for ind_train, ind_test in CV.split(X):
         Eval_KNN_train[s, j] = np.sum(y_train_est != y_train) / len(y_train)
     j += 1
 
-EgenS = np.zeros(len(ks))
-EgenS_train = np.zeros(len(ks))
-for s, _ in enumerate(ks):
-    runningSum = 0
-    runningSum_train = 0
-    for k in range(K):
-        runningSum += (sizeDval_KNN[k] / N) * Eval_KNN[s, k]
-        runningSum_train += (sizeDval_KNN_train[k] / N) * Eval_KNN_train[s, k]
-    EgenS[s] = runningSum
-    EgenS_train[s] = runningSum_train
-index_opt = np.argmin(EgenS)
-k_opt = ks[index_opt]  # The optimal number of neighbors
+
+k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eval_KNN,Eval_KNN_train,sizeDval_KNN,sizeDval_KNN_train)
+
 
 figure(figsize=(10, 5))
 title('Optimal k: {}'.format(k_opt))
-plot(ks, EgenS_train, 'r.-', EgenS, 'b.-')
+plot(ks, knn_validation_error, 'r.-', knn_training_error, 'b.-')
 xlabel('Regularization factor')
 ylabel('Squared error (cross-validation)')
 legend(['Training error','Validation error'])
@@ -96,22 +104,14 @@ for ind_train, ind_test in CV.split(X):
 
     j += 1
 
-EgenS = np.zeros(len(lambdas))
-EgenS_train = np.zeros(len(lambdas))
-for s, _ in enumerate(lambdas):
-    runningSum = 0
-    runningSum_train = 0
-    for k in range(K):
-        runningSum += (sizeDval_KNN[k] / N) * Eval_KNN[s, k]
-        runningSum_train += (sizeDval_KNN_train[k] / N) * Eval_KNN_train[s, k]
-    EgenS[s] = runningSum
-    EgenS_train[s] = runningSum_train
-index_opt = np.argmin(EgenS)
-lambda_opt = lambdas[index_opt]  # The optimal number of neighbors
+
+
+lambda_opt, validation_error, train_error = compute_errors_and_opt(lambdas, Eval_KNN, Eval_KNN_train, sizeDval_KNN, sizeDval_KNN_train)
+
 
 figure(figsize=(10, 5))
 title('Optimal lambda: 1e{0}'.format(lambda_opt))
-plot(lambdas, EgenS_train, 'r.-', EgenS, 'b.-')
+plot(lambdas, train_error, 'r.-', validation_error, 'b.-')
 xscale('log')
 xlabel('Regularization factor')
 ylabel('Squared error (cross-validation)')
