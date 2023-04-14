@@ -1,15 +1,20 @@
+import numpy
+import numpy as np
 import torch
 from numpy import argmin
 from toolbox_02450 import rlr_validate, train_neural_net
 from regression_importdata import *
 from sklearn import model_selection
 import scipy.stats as st
+from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
+                               xticks, yticks, legend, show, hist, title,
+                               subplots_adjust, scatter, savefig, suptitle, plot, xlim, ylim)
 
 # Parameters
-K1 = 10  # Outer fold
-K2 = 10  # Inner fold
+K1 = 5  # Outer fold
+K2 = 5  # Inner fold
 lambdas = np.power(10., np.arange(-3, 2, 0.1))  # Regularization factors in RLR
-hs = [i for i in range(1, 5)]  # Number of hidden units in ANN
+hs = [i for i in range(1, 3)]  # Number of hidden units in ANN
 NR = 1  # Number of iterations when training ANN
 max_iter = 10000  # Maximum number of iterations when training ANN model.
 
@@ -24,19 +29,31 @@ CVInner = model_selection.KFold(n_splits=K2, shuffle=True)
 i = 0  # Iterate of the outer loop
 
 # Functions for computing validation error. Is not used so perhaps delete.
-def validationError(X, y, model):
-    distance_function = lambda yt, xt: (yt-model.predict(xt))**2
+def computeMse(y,yhat):
+    distance_function = lambda y1, y2: (y1-y2)**2
     tmp_sum = 0
     for i in range(len(y)):
-        tmp_sum += distance_function(y[i],X[i,:])
+        tmp_sum += distance_function(y[i],yhat[i])
     return tmp_sum/len(y)
+
+
+def standardize_X(matrix):
+    matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
+    return matrix * (1 / np.std(matrix, 0))
+
+def standardize_y(target):
+    target = target - target.mean()
+    return target * (1 / np.std(target))
+
+
 
 # ANN model
 def ann_model(n_hidden_units):
     return lambda: torch.nn.Sequential(
         torch.nn.Linear(M, n_hidden_units),  # M features to H hidden units
         # 1st transfer function, either Tanh or ReLU:
-        torch.nn.Tanh(),  # torch.nn.ReLU(),
+        #torch.nn.Tanh(),
+        torch.nn.ReLU(),
         torch.nn.Linear(n_hidden_units, 1)  # H hidden units to 1 output neuron
         # torch.nn.Sigmoid()  # final tranfer function
     )
@@ -50,45 +67,62 @@ Egen = 0
 ANN_loss = []
 RLR_loss = []
 BASE_loss = []
-# Etest = np.zeros(K1)
 
-# Change data to have intercept attribute for the RLR model
-X_intercept = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
 
 # Header of the table that we want to produce.
 print("{}\t{}\t{}\t{}\t{}\t{}".format('fold i','h*','error','lambda*','error','Baseline error'))
+
+
+
+# summaries, summaries_axes = plot.subplots(1,2, figsize=(10,5))
+# # Make a list for storing assigned color of learning curve for up to K=10
+# color_list = ['tab:orange', 'tab:green', 'tab:purple', 'tab:brown', 'tab:pink',
+#               'tab:gray', 'tab:olive', 'tab:cyan', 'tab:red', 'tab:blue']
+
+ANN_y_hat = np.empty((0))
+RLR_y_hat = np.empty((0))
+# ANN_y_hat = np.concatenate((ANN_y_hat, [4,5]))
+
 
 # Outer loop
 for par_index, test_index in CVOuter.split(X):
     j = 0  # Iterate for the inner loop.
 
     # Split data into test data and parameter data.
-    X_test, y_test = torch.Tensor(X[test_index, :]), torch.Tensor(y[test_index])
+    X_test, y_test = X[test_index, :], y[test_index]
     X_par, y_par = X[par_index, :], y[par_index]
 
     # This inner loop cross-validates the ANN model (the second level cross-validation)
     for train_index, val_index in CVInner.split(X[par_index, :]):
         # Split parameter data into training data and validation data
-        sizeDval[j] = sum(val_index)
-        X_train, y_train = torch.Tensor(X_par[train_index, :]), torch.Tensor(y_par[train_index])
-        X_val, y_val = torch.Tensor(X_par[val_index, :]), torch.Tensor(y_par[val_index])
+
+        X_train, y_train = X_par[train_index, :], y_par[train_index]
+        X_val, y_val = X_par[val_index, :], y_par[val_index]
+
+        X_train = standardize_X(X_train)
+        X_val = standardize_X(X_val)
+
+        sizeDval[j] = len(val_index)
+        # X_train_t, y_train_t = torch.Tensor(X_train), torch.Tensor(y_train)
+        # X_val_t, y_val = torch.Tensor(X_val), y_val#, torch.Tensor(y_val)
 
         # Loop over the complexity parameter for the ANN model (number of hidden units)
         for s, h in enumerate(hs):
             # Train model ###### TODO Use pytorch directly
             net, final_loss, learning_curve = train_neural_net(ann_model(h),
                                                                loss_fn,
-                                                               X=X_train,
-                                                               y=y_train.unsqueeze(1),
+                                                               X=torch.Tensor(X_train),
+                                                               y=torch.Tensor(y_train).unsqueeze(1),
                                                                n_replicates=NR,
                                                                max_iter=max_iter)
             # y_pred = net(X_val).float()   # activation of final note, i.e. prediction of network
             # y_val = y_val.float()
 
             # Validate the model on the validation data and store results
-            y_val_est = net(X_val).squeeze()
-            se = (y_val_est.float() - y_val.float()) ** 2  # squared error
-            mse = (sum(se).type(torch.float) / len(y_val)).data.numpy()  # mean
+            y_val_est_tensor = net(torch.Tensor(X_val)).squeeze()
+            y_val_est = y_val_est_tensor.detach().numpy()
+            se = np.square(y_val - y_val_est) # squared error
+            mse = np.mean(se)
             Eval[s, j] = mse
 
         j += 1
@@ -98,7 +132,7 @@ for par_index, test_index in CVOuter.split(X):
     for s, _ in enumerate(hs):
         runningSum = 0
         for j in range(K2):
-            runningSum += (sizeDval[j]/sum(par_index)) * Eval[s, j]
+            runningSum += (sizeDval[j]/len(par_index)) * Eval[s, j]
         EgenS[s] = runningSum
     # Select optimal model M*
     index_opt = argmin(EgenS)
@@ -106,13 +140,17 @@ for par_index, test_index in CVOuter.split(X):
 
     # RLR - Here the optimal value of lambda is found.
     # This is essentially another inner loop, but the function rlr_validate does this.
+
+    # Change data to have intercept attribute for the RLR model
+
+    X_intercept = np.concatenate((np.ones((X.shape[0], 1)), standardize_X(X)), 1)
     opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_intercept[par_index, :], y[par_index], lambdas, K2)
 
-    # Choose the optimal RLR model:
+    # Pick out the weights for the optimal lambda
     index_lambda_opt = np.where(lambdas == opt_lambda)
     rlr_opt = mean_w_vs_lambda[:, index_lambda_opt]  # The optimal coefficients for the RLR model.
 
-    # With all three models selected, we then train them on the parameter data and test on the test data.
+    ##### With all three models selected, we then train them on the parameter data and test on the test data.
 
     # Baseline model (computing the average and use this as prediction)
     baseline = y_par.mean()
@@ -125,9 +163,14 @@ for par_index, test_index in CVOuter.split(X):
                                  y=torch.Tensor(y_par).unsqueeze(1), n_replicates=NR,
                                  max_iter=max_iter)
     # Compute generalization error of ANN
-    y_val_est = net(X_test).squeeze()
-    se = (y_val_est.float() - y_test.float()) ** 2  # squared error
-    mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
+    # y_val_est = net(X_test).squeeze()
+    # se = (y_val_est.float() - y_test.float()) ** 2  # squared error
+    # mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
+    y_test_est_tensor = net(torch.Tensor(X_test)).squeeze()
+    y_test_est = y_test_est_tensor.detach().numpy()
+    ANN_y_hat = numpy.concatenate((ANN_y_hat,y_test_est))
+    se = np.square(y_test - y_test_est)  # squared error
+    mse = np.mean(se)
     Error_test_ann = mse
 
     # Train RLR on D_par:
@@ -146,14 +189,15 @@ for par_index, test_index in CVOuter.split(X):
     w_rlr = np.linalg.solve(XtX+lambdaI, Xty).squeeze()
     # Make predictions on test data
     rlr_y_est = rlr_X_test @ w_rlr
+    RLR_y_hat = np.concatenate((RLR_y_hat,rlr_y_est))
     # Compute error
     rlr_loss = np.square(y_test - rlr_y_est)
     Error_test_rlr = np.square(y_test - rlr_y_est).sum(axis=0)/y_test.shape[0]
 
     # Store all losses such that we can do statistics
-    ANN_loss.append(se)
-    RLR_loss.append(rlr_loss)
-    BASE_loss.append(baseline_loss)
+    ANN_loss += se.tolist()
+    RLR_loss += rlr_loss.tolist()
+    BASE_loss += baseline_loss.tolist()
 
     # Estimate generalization error on the fly
     # Egen += (sum(test_index)/N) * Etest_i
@@ -164,9 +208,9 @@ for par_index, test_index in CVOuter.split(X):
 # End of outer loop.
 
 # Losses of the three models. Make into numpy arrays.
-ANN_loss = torch.cat(ANN_loss).detach().numpy()
-RLR_loss = torch.cat(RLR_loss).detach().numpy()
-BASE_loss = torch.cat(BASE_loss).detach().numpy()
+ANN_loss = np.array(ANN_loss)
+RLR_loss = np.array(RLR_loss)
+BASE_loss = np.array(BASE_loss)
 
 # Do statistics
 alpha = 0.05
@@ -183,20 +227,32 @@ pAC = 2*st.t.cdf(-np.abs(np.mean(ANN_loss - BASE_loss))/st.sem(ANN_loss - BASE_l
 CIBC = st.t.interval(1-alpha, len(RLR_loss)-1, loc=np.mean(RLR_loss - BASE_loss), scale=st.sem(RLR_loss - BASE_loss))  # Confidence interval
 pBC = 2*st.t.cdf(-np.abs(np.mean(RLR_loss - BASE_loss))/st.sem(RLR_loss - BASE_loss), df=len(RLR_loss)-1)  # p-value
 
-print("The A-B confidence interval:", CIAB)
-print("The A-B p-value:", pAB)
-print("The A-C confidence interval:", CIAC)
-print("The A-C p-value:", pAC)
-print("The B-C confidence interval:", CIBC)
-print("The B-C p-value:", pBC)
+print("The ANN-RLR confidence interval:", CIAB)
+print("The ANN-RLR p-value:", pAB)
+print("The ANN-BASE confidence interval:", CIAC)
+print("The ANN-BASE p-value:", pAC)
+print("The RLR-BASE confidence interval:", CIBC)
+print("The RLR-BASE p-value:", pBC)
 
 # y_hat = fitted_model_opt.predict(X)
 #
-# fig = figure()
-# scatter(y_hat,y)
-# xlabel("Predicted values")
-# ylabel("True values")
-# show()
+fig = figure()
+scatter(y,ANN_y_hat)
+plot(xlim(), xlim(), c='black')
+legend(["","y=x"])
+xlabel("True values")
+ylabel("Predicted values")
+title("ANN vs. True value")
+show()
+
+fig = figure()
+scatter(y,RLR_y_hat)
+plot(xlim(), xlim(), c='black')
+legend(["","y=x"])
+xlabel("True values")
+ylabel("Predicted values")
+title("RLR vs. True value")
+show()
 #
 # fig = figure()
 # residuals = y-y_hat

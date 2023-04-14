@@ -29,9 +29,9 @@ attributeNames = np.asarray(df.columns[cols])
 N, M = X.shape
 
 # Standardize data
-X = X - np.ones((N, 1)) * X.mean(0)
-X = X * (1 / np.std(X, 0))
-
-y = y - y.mean()
-y = y * (1 / np.std(y))
+# X = X - np.ones((N, 1)) * X.mean(0)
+# X = X * (1 / np.std(X, 0))
+#
+# y = y - y.mean()
+# y = y * (1 / np.std(y))
 
