@@ -45,8 +45,6 @@ def standardize_y(target):
     target = target - target.mean()
     return target * (1 / np.std(target))
 
-
-
 # ANN model
 def ann_model(n_hidden_units):
     return lambda: torch.nn.Sequential(
@@ -81,6 +79,7 @@ print("{}\t{}\t{}\t{}\t{}\t{}".format('fold i','h*','error','lambda*','error','B
 
 ANN_y_hat = np.empty((0))
 RLR_y_hat = np.empty((0))
+y_true = []
 # ANN_y_hat = np.concatenate((ANN_y_hat, [4,5]))
 
 
@@ -163,15 +162,13 @@ for par_index, test_index in CVOuter.split(X):
                                  y=torch.Tensor(y_par).unsqueeze(1), n_replicates=NR,
                                  max_iter=max_iter)
     # Compute generalization error of ANN
-    # y_val_est = net(X_test).squeeze()
-    # se = (y_val_est.float() - y_test.float()) ** 2  # squared error
-    # mse = (sum(se).type(torch.float) / len(y_test)).data.numpy()  # mean
     y_test_est_tensor = net(torch.Tensor(X_test)).squeeze()
     y_test_est = y_test_est_tensor.detach().numpy()
     ANN_y_hat = numpy.concatenate((ANN_y_hat,y_test_est))
     se = np.square(y_test - y_test_est)  # squared error
     mse = np.mean(se)
     Error_test_ann = mse
+    y_true.append(y_test)
 
     # Train RLR on D_par:
     # Set up variables in order to train the RLR model
@@ -237,22 +234,22 @@ print("The RLR-BASE p-value:", pBC)
 # y_hat = fitted_model_opt.predict(X)
 #
 fig = figure()
-scatter(y,ANN_y_hat)
+scatter(y_true,ANN_y_hat)
 plot(xlim(), xlim(), c='black')
 legend(["","y=x"])
 xlabel("True values")
 ylabel("Predicted values")
 title("ANN vs. True value")
-show()
+savefig("../plots/ANNvsTrue.svg", bbox_inches='tight')
 
 fig = figure()
-scatter(y,RLR_y_hat)
+scatter(y_true,RLR_y_hat)
 plot(xlim(), xlim(), c='black')
 legend(["","y=x"])
 xlabel("True values")
 ylabel("Predicted values")
 title("RLR vs. True value")
-show()
+savefig("../plots/RLRvsTrue.svg", bbox_inches='tight')
 #
 # fig = figure()
 # residuals = y-y_hat
