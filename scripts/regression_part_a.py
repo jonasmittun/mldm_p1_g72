@@ -125,7 +125,7 @@ k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eva
 
 figure(figsize=(10, 5))
 title('Optimal k: {}'.format(k_opt))
-plot(ks, knn_validation_error, 'b.-', knn_training_error, 'r.-')
+plot(ks, knn_validation_error, 'b.-', [0]+knn_training_error.tolist(), 'r.-')
 xlabel('Number of hidden units')
 ylabel('Squared mean error (cross-validation)')
 legend(['Validation error','Training error'])
