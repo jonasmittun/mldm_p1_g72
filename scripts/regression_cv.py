@@ -1,18 +1,18 @@
 import numpy
-import numpy as np
 import torch
 from numpy import argmin
 from toolbox_02450 import rlr_validate, train_neural_net
 from regression_importdata import *
 from sklearn import model_selection
 import scipy.stats as st
+from itertools import chain
 from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
                                xticks, yticks, legend, show, hist, title,
                                subplots_adjust, scatter, savefig, suptitle, plot, xlim, ylim)
 
 # Parameters
-K1 = 5  # Outer fold
-K2 = 5  # Inner fold
+K1 = 10  # Outer fold
+K2 = 10  # Inner fold
 lambdas = np.power(10., np.arange(-3, 2, 0.1))  # Regularization factors in RLR
 hs = [i for i in range(1, 3)]  # Number of hidden units in ANN
 NR = 1  # Number of iterations when training ANN
@@ -36,7 +36,11 @@ def computeMse(y,yhat):
         tmp_sum += distance_function(y[i],yhat[i])
     return tmp_sum/len(y)
 
-
+# TODO: Handle the following bugs...
+#  <ipython-input-2-b6e01f0b0fcb>:42: RuntimeWarning: divide by zero encountered in true_divide
+#   return matrix * (1 / np.std(matrix, 0))
+#  <ipython-input-2-b6e01f0b0fcb>:42: RuntimeWarning: invalid value encountered in multiply
+#   return matrix * (1 / np.std(matrix, 0))
 def standardize_X(matrix):
     matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
     return matrix * (1 / np.std(matrix, 0))
@@ -77,6 +81,7 @@ print("{}\t{}\t{}\t{}\t{}\t{}".format('fold i','h*','error','lambda*','error','B
 # color_list = ['tab:orange', 'tab:green', 'tab:purple', 'tab:brown', 'tab:pink',
 #               'tab:gray', 'tab:olive', 'tab:cyan', 'tab:red', 'tab:blue']
 
+est_arr = list()
 ANN_y_hat = np.empty((0))
 RLR_y_hat = np.empty((0))
 y_true = []
@@ -120,6 +125,7 @@ for par_index, test_index in CVOuter.split(X):
             # Validate the model on the validation data and store results
             y_val_est_tensor = net(torch.Tensor(X_val)).squeeze()
             y_val_est = y_val_est_tensor.detach().numpy()
+            est_arr.append(y_val_est)
             se = np.square(y_val - y_val_est) # squared error
             mse = np.mean(se)
             Eval[s, j] = mse
@@ -164,7 +170,7 @@ for par_index, test_index in CVOuter.split(X):
     # Compute generalization error of ANN
     y_test_est_tensor = net(torch.Tensor(X_test)).squeeze()
     y_test_est = y_test_est_tensor.detach().numpy()
-    ANN_y_hat = numpy.concatenate((ANN_y_hat,y_test_est))
+    ANN_y_hat = numpy.concatenate((ANN_y_hat, y_test_est))
     se = np.square(y_test - y_test_est)  # squared error
     mse = np.mean(se)
     Error_test_ann = mse
@@ -232,7 +238,10 @@ print("The RLR-BASE confidence interval:", CIBC)
 print("The RLR-BASE p-value:", pBC)
 
 # y_hat = fitted_model_opt.predict(X)
-#
+
+# y_true format up to this point is list of lists, which isn't compatible with scatterplot
+y_true = list(chain(*y_true))
+
 fig = figure()
 scatter(y_true,ANN_y_hat)
 plot(xlim(), xlim(), c='black')
@@ -241,6 +250,7 @@ xlabel("True values")
 ylabel("Predicted values")
 title("ANN vs. True value")
 savefig("../plots/ANNvsTrue.svg", bbox_inches='tight')
+show()
 
 fig = figure()
 scatter(y_true,RLR_y_hat)
@@ -250,6 +260,17 @@ xlabel("True values")
 ylabel("Predicted values")
 title("RLR vs. True value")
 savefig("../plots/RLRvsTrue.svg", bbox_inches='tight')
+show()
+
+fig = figure()
+plot(ANN_y_hat, color='red')
+plot(y_true, color='blue')
+legend(["Prediction", "True Value"])
+xlabel("Instance No.")
+ylabel("Refractive Index")
+title("ANN Predictions vs. True Value")
+savefig("../plots/ANNcomp.svg", bbox_inches='tight')
+show()
 #
 # fig = figure()
 # residuals = y-y_hat
