@@ -17,7 +17,7 @@ from classification_importdata import *
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
-K = 20
+K = 10
 
 def standardize_X(matrix):
     matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
@@ -95,17 +95,25 @@ Eval_KNN = np.zeros((len(lambdas), K))
 Eval_KNN_train = np.zeros((len(lambdas), K))
 for ind_train, ind_test in CV.split(X):
     X_train, y_train = standardize_X(X[ind_train, :]), y[ind_train]
+    ones = np.ones((X_train.shape[0],1))
+    X_train = np.concatenate((ones, X_train),1)
+
+    # X_train, y_train = np.concatenate((np.ones((X[ind_train, :].shape[0], 1)), standardize_X(X[ind_train, :]))), y[ind_train]
+    # X_test, y_test = np.concatenate((np.ones((X[ind_test, :].shape[0], 1)), standardize_X(X[ind_test, :]))), y[ind_test]
     X_test, y_test = standardize_X(X[ind_test, :]), y[ind_test]
+    X_test = np.concatenate((np.ones((X_test.shape[0],1)),X_test),1)
+
+
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, regularization in enumerate(lambdas):
-        knclassifier = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
+        logistic = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
                                              tol=1e-4, random_state=1,
                                              penalty='l2', C=1 / regularization,
                                              max_iter=max_iterations)
-        knclassifier.fit(X_train, y_train)
-        y_val_est = knclassifier.predict(X_test)
-        y_train_est = knclassifier.predict(X_train)
+        logistic.fit(X_train, y_train)
+        y_val_est = logistic.predict(X_test)
+        y_train_est = logistic.predict(X_train)
 
         Eval_KNN[s, j] = np.sum(y_val_est != y_test) / len(y_test)
         Eval_KNN_train[s, j] = np.sum(y_train_est != y_train) / len(y_train)

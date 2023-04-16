@@ -16,8 +16,8 @@ from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
 # Parameters
 K1 = 10  # Outer fold
 K2 = 10  # Inner fold
-lambdas = np.power(10., np.arange(-3, 2, 0.05))  # Regularization factors in Multinomial Regression
-max_iterations = 20000
+lambdas = np.power(10., np.arange(-3, 3, 0.05))  # Regularization factors in Multinomial Regression
+max_iterations = 10000
 K_max = 20
 ks = [i for i in range(1, K_max + 1)]
 
@@ -52,7 +52,12 @@ Y_TRUE = []
 
 def standardize_X(matrix):
     matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
-    return matrix * (1 / np.std(matrix, 0))
+    # Check if any column has 0 std
+    std = np.std(matrix, 0)
+    b = np.argwhere(std == 0)
+    std[np.reshape(b, (len(b)))] = 1
+    return matrix * (1 / std)
+
 
 # Change data to have intercept attribute for the RLR model
 X_intercept = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
@@ -122,7 +127,7 @@ for par_index, test_index in CVOuter.split(X):
                                         metric=metric,
                                         metric_params=metric_params)
     knclassifier.fit(standardize_X(X_par), y_par)
-    y_hat_knn = knclassifier.predict(X_test)
+    y_hat_knn = knclassifier.predict(standardize_X(X_test))
     knn_loss = y_hat_knn != y_test
     Error_test_KNN = np.sum(knn_loss) / len(y_test)
 
@@ -135,7 +140,9 @@ for par_index, test_index in CVOuter.split(X):
         # Split parameter data into training data and validation data
         sizeDval_RMR[k] = len(val_index)
         X_train, y_train = standardize_X(X_par[train_index, :]), y_par[train_index]
+        X_train_in = np.concatenate((np.ones((X_train.shape[0], 1)), X_train), 1)
         X_val, y_val = standardize_X(X_par[val_index, :]), y_par[val_index]
+        X_val_in = np.concatenate((np.ones((X_val.shape[0], 1)), X_val), 1)
 
         # Loop over the complexity parameter for the ANN model (number of hidden units)
         for s, regularization in enumerate(lambdas):
@@ -143,8 +150,8 @@ for par_index, test_index in CVOuter.split(X):
                                         tol=1e-4, random_state=1,
                                         penalty='l2', C=1 / regularization,
                                         max_iter=max_iterations)
-            mdl.fit(X_train, y_train)
-            y_val_est = mdl.predict(X_val)
+            mdl.fit(X_train_in, y_train)
+            y_val_est = mdl.predict(X_val_in)
 
             val_error_rate = np.sum(y_val_est != y_val) / len(y_val)
             Eval_RMR[s, k] = val_error_rate
@@ -166,8 +173,10 @@ for par_index, test_index in CVOuter.split(X):
                                 tol=1e-4, random_state=1,
                                 penalty='l2', C=1 / lambda_opt,
                                 max_iter=max_iterations)
-    mdl.fit(standardize_X(X_par), y_par)
-    y_hat_rmr = mdl.predict(X_test)
+    X_par_in = np.concatenate((np.ones((X_par.shape[0], 1)), standardize_X(X_par)), 1)
+    mdl.fit(X_par_in, y_par)
+    X_test_in = np.concatenate((np.ones((X_test.shape[0], 1)), standardize_X(X_test)), 1)
+    y_hat_rmr = mdl.predict(X_test_in)
     rmr_loss = y_hat_rmr != y_test
     Error_test_RMR = np.sum(rmr_loss) / len(y_test)
 
@@ -240,8 +249,8 @@ def matrix_scatter_plot(attributes, prediction, modelname):
     savefig("../plots/spm-{}-est.svg".format(modelname), bbox_inches='tight')
     # show()
 
-# att = [1 for _ in range(M)]
-att = [1,0,0,1,0,1,0,0,1]
+att = [1 for _ in range(M)]
+# att = [1,0,0,1,0,1,0,0,1]
 all_att = np.arange(M)
 masked = all_att[att]
 matrix_scatter_plot(masked, y, "true")
