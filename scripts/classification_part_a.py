@@ -17,7 +17,7 @@ from classification_importdata import *
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
-K = 10
+K = 20
 
 def standardize_X(matrix):
     matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
@@ -34,7 +34,7 @@ def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_t
         runningSum = 0
         runningSum_train = 0
         for k in range(K):
-            runningSum += (size_val[k] / N) * eval_error[s, k]
+            runningSum += (size_val[k] / sum(size_val)) * eval_error[s, k]
             runningSum_train += (size_train[k] / sum(size_train)) * train_error[s, k]
         EgenS[s] = runningSum
         EgenS_train[s] = runningSum_train
@@ -45,9 +45,9 @@ def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_t
 
 CV = model_selection.KFold(n_splits=K, shuffle=True)
 # Values of lambda
-lambdas = np.power(10., np.arange(-3, 2, 0.05))
+lambdas = np.power(10., np.arange(-3, 3, 0.05))
 max_iterations = 10000
-K_max = 50
+K_max = 100
 ks = [i for i in range(1, K_max + 1)]
 sizeDval_KNN = np.zeros(K)
 sizeDval_KNN_train = np.zeros(K)
@@ -80,7 +80,8 @@ k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eva
 
 figure(figsize=(10, 5))
 title('Optimal k: {}'.format(k_opt))
-plot(ks, knn_training_error, 'r.-', knn_validation_error, 'b.-')
+plot(ks, knn_training_error, 'r.-')
+plot(ks, knn_validation_error, 'b.-')
 xlabel('Nearest neighbors')
 ylabel('Error rate (cross-validation)')
 legend(['Training error', 'Validation error'])
@@ -118,7 +119,8 @@ lambda_opt, validation_error, train_error = compute_errors_and_opt(lambdas, Eval
 
 figure(figsize=(10, 5))
 title('Optimal lambda: 1e{0}'.format(lambda_opt))
-plot(lambdas, train_error, 'r.-', validation_error, 'b.-')
+plot(lambdas, train_error, 'r.-')
+plot(lambdas, validation_error, 'b.-')
 xscale('log')
 xlabel('Regularization factor')
 ylabel('Error rate (cross-validation)')
