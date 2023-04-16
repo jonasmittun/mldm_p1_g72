@@ -31,3 +31,14 @@ def reverse_standardization_y(target, prediction):
     mean = np.mean(target)
     std = np.std(target)
     return prediction * std + mean
+
+
+def find_optimal_parameter(params, e_val, split_sizes, K):
+    e_gen = [0] * len(params)
+    for s, _ in enumerate(params):
+        tmp_sum = 0
+        for j in range(K):
+            tmp_sum += (split_sizes[j] / sum(split_sizes)) * e_val[s, j]
+        e_gen[s] = tmp_sum
+    # Select optimal parameter
+    return params[np.argmin(e_gen)]
