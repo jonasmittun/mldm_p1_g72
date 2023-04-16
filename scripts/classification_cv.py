@@ -16,7 +16,7 @@ from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
 # Parameters
 K1 = 10  # Outer fold
 K2 = 10  # Inner fold
-lambdas = np.power(10., np.arange(-3, 3, 0.05))  # Regularization factors in Multinomial Regression
+lambdas = np.power(10., np.arange(-4, 3, 0.05))  # Regularization factors in Multinomial Regression
 max_iterations = 10000
 K_max = 20
 ks = [i for i in range(1, K_max + 1)]

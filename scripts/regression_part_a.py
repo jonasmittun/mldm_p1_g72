@@ -10,24 +10,42 @@ from sklearn import model_selection
 from regression_importdata import *
 from toolbox_02450 import rlr_validate, train_neural_net
 import torch
-def standardize_X(matrix):
-    matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
-    return matrix * (1 / np.std(matrix, 0))
+def standardize_X(known, test):
+    test = test - np.ones((test.shape[0], 1)) * known.mean(0)
+    # Check if any column has 0 std
+    std = np.std(known, 0)
+    b = np.argwhere(std == 0)
+    std[np.reshape(b, (len(b)))] = 1
+    return test * (1 / std)
+
+def standardize_y(target):
+    target = target - np.ones(target.shape[0]) * np.mean(target)
+    std = np.std(target)
+    if std == 0:
+        return 0
+    return target * (1 / std)
+
+
+def reverse_standardization_y(target, prediction):
+    mean = np.mean(target)
+    std = np.std(target)
+    return prediction * std + mean
+
 
 # Add offset attribute
-X = np.concatenate((np.ones((X.shape[0], 1)), standardize_X(X)), 1)
+X_in = np.concatenate((np.ones((X.shape[0], 1)), standardize_X(X,X)), 1)
 attributeNames = [u'Offset'] + attributeNames
-M = M + 1
+# M = M + 1
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
 K = 10
 
 # Values of lambda
-lambdas = np.power(10., np.arange(-3, 2, 0.1))
+lambdas = np.power(10., np.arange(-3, 2, 0.05))
 
 # Initialize variables
-opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X, y, lambdas, K)
+opt_val_err, opt_lambda, mean_w_vs_lambda, train_err_vs_lambda, test_err_vs_lambda = rlr_validate(X_in, y, lambdas, K)
 
 figure(figsize=(10, 5))
 title('Optimal lambda: 1e{0}'.format(np.log10(opt_lambda)))
@@ -41,24 +59,7 @@ print(opt_val_err)
 index_of_opt_lambda = np.where(lambdas == opt_lambda)
 coef = mean_w_vs_lambda[:,index_of_opt_lambda]
 print(coef)
-# Display results
-# print('Regularized linear regression:')
-# print('- Training error: {0}'.format(Error_train_rlr.mean()))
-# print('- Test error:     {0}'.format(Error_test_rlr.mean()))
-# print('- R^2 train:     {0}'.format(
-#     (Error_train_nofeatures.sum() - Error_train_rlr.sum()) / Error_train_nofeatures.sum()))
-# print(
-#     '- R^2 test:     {0}\n'.format((Error_test_nofeatures.sum() - Error_test_rlr.sum()) / Error_test_nofeatures.sum()))
-#
-# print('Weights in last fold:')
-# for m in range(M):
-#     print('{:>15} {:>15}'.format(attributeNames[m], np.round(w_rlr[m, -1], 2)))
 
-
-
-
-# Create crossvalidation partition for evaluation
-K = 5
 
 def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_train):
     EgenS = np.zeros(len(complexity))
@@ -67,7 +68,7 @@ def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_t
         runningSum = 0
         runningSum_train = 0
         for k in range(K):
-            runningSum += (size_val[k] / N) * eval_error[s, k]
+            runningSum += (size_val[k] / sum(size_val)) * eval_error[s, k]
             runningSum_train += (size_train[k] / sum(size_train)) * train_error[s, k]
         EgenS[s] = runningSum
         EgenS_train[s] = runningSum_train
@@ -83,17 +84,19 @@ def ann_model(n_hidden_units):
     return lambda: torch.nn.Sequential(
         torch.nn.Linear(M, n_hidden_units),  # M features to H hidden units
         # 1st transfer function, either Tanh or ReLU:
-        #torch.nn.Tanh(),
-        torch.nn.ReLU(),
+        torch.nn.Tanh(),
+        # torch.nn.ReLU(),
         torch.nn.Linear(n_hidden_units, 1)  # H hidden units to 1 output neuron
         # torch.nn.Sigmoid()  # final tranfer function
     )
 loss_fn = torch.nn.MSELoss()
 
 
+# Create crossvalidation partition for evaluation
+K = 10
 CV = model_selection.KFold(n_splits=K, shuffle=True)
 max_iterations = 10000
-ks = [i for i in range(1, 8)]
+ks = [i for i in range(1, 4)]
 sizeDval_KNN = np.zeros(K)
 sizeDval_KNN_train = np.zeros(K)
 j = 0
@@ -107,16 +110,16 @@ for ind_train, ind_test in CV.split(X):
     for s, h in enumerate(ks):
         net, final_loss, learning_curve = train_neural_net(ann_model(h),
                                                            loss_fn,
-                                                           X=torch.Tensor(X_train),
-                                                           y=torch.Tensor(y_train).unsqueeze(1),
+                                                           X=torch.Tensor(standardize_X(X_train,X_train)),
+                                                           y=torch.Tensor(standardize_y(y_train)).unsqueeze(1),
                                                            n_replicates=1,
                                                            max_iter=10000)
 
-        y_test_est_tensor = net(torch.Tensor(torch.Tensor(X_test))).squeeze()
-        y_test_est = y_test_est_tensor.detach().numpy()
+        y_test_est_tensor = net(torch.Tensor(torch.Tensor(standardize_X(X_train,X_test)))).squeeze()
+        y_test_est = reverse_standardization_y(y_train, y_test_est_tensor.detach().numpy())
         Eval_KNN[s, j] = np.mean(np.square(y_test - y_test_est))
-        y_train_est_tensor = net(torch.Tensor(torch.Tensor(X_train))).squeeze()
-        y_train_est = y_train_est_tensor.detach().numpy()
+        y_train_est_tensor = net(torch.Tensor(torch.Tensor(standardize_X(X_train,X_train)))).squeeze()
+        y_train_est = reverse_standardization_y(y_train, y_train_est_tensor.detach().numpy())
         Eval_KNN_train[s, j] = np.mean(np.square(y_train - y_train_est))
     j += 1
 
@@ -125,8 +128,9 @@ k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eva
 
 
 figure(figsize=(10, 5))
-title('Optimal k: {}'.format(k_opt))
-plot(ks, knn_validation_error, 'b.-', [0]+knn_training_error.tolist(), 'r.-')
+title('Optimal h: {}'.format(k_opt))
+plot(ks, knn_training_error.tolist(), 'r.-')
+plot(ks, knn_validation_error, 'b.-')
 xlabel('Number of hidden units')
 ylabel('Squared mean error (cross-validation)')
 legend(['Validation error','Training error'])

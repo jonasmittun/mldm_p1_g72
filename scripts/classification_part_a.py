@@ -45,7 +45,7 @@ def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_t
 
 CV = model_selection.KFold(n_splits=K, shuffle=True)
 # Values of lambda
-lambdas = np.power(10., np.arange(-3, 3, 0.05))
+lambdas = np.power(10., np.arange(-4, 3, 0.05))
 max_iterations = 10000
 K_max = 100
 ks = [i for i in range(1, K_max + 1)]
