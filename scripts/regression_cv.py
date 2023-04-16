@@ -1,6 +1,5 @@
 import numpy
 import torch
-from numpy import argmin
 from toolbox_02450 import rlr_validate, train_neural_net
 from regression_importdata import *
 from sklearn import model_selection
@@ -34,15 +33,6 @@ RLR_y_hat = np.empty((0))
 y_true = np.empty((0))
 
 
-def find_optimal_parameter(params, e_val, split_sizes):
-    e_gen = [0] * len(params)
-    for s, _ in enumerate(params):
-        tmp_sum = 0
-        for j in range(K2):
-            tmp_sum += (split_sizes[j] / sum(split_sizes)) * e_val[s, j]
-        e_gen[s] = tmp_sum
-    # Select optimal parameter
-    return params[argmin(e_gen)]
 
 
 def ann_model(n_hidden_units):
@@ -92,7 +82,7 @@ def inner_ann(X_par, y_par, params):
         j += 1
 
     # Select ANN* - For each complexity parameter: compute generalization error
-    return find_optimal_parameter(hs, e_val, split_sizes_ann)
+    return find_optimal_parameter(hs, e_val, split_sizes_ann,K2)
 
 
 def inner_rlr(X_par, y_par, params, cv_k):
