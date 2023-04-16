@@ -49,7 +49,10 @@ KNN_hats = []
 RMR_hats = []
 BASE_hats = []
 Y_TRUE = []
-# Etest = np.zeros(K1)
+
+def standardize_X(matrix):
+    matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
+    return matrix * (1 / np.std(matrix, 0))
 
 # Change data to have intercept attribute for the RLR model
 X_intercept = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
@@ -83,9 +86,9 @@ for par_index, test_index in CVOuter.split(X):
     for train_index, val_index in CVInner.split(X_par):
 
         # extract training and test set for current CV fold
-        X_train = X_par[train_index, :]
+        X_train = standardize_X(X_par[train_index, :])
         y_train = y_par[train_index]
-        X_val = X_par[val_index, :]
+        X_val = standardize_X(X_par[val_index, :])
         y_val = y_par[val_index]
         sizeDval_KNN[j] = len(val_index)
 
@@ -118,7 +121,7 @@ for par_index, test_index in CVOuter.split(X):
     knclassifier = KNeighborsClassifier(n_neighbors=k_opt, p=dist,
                                         metric=metric,
                                         metric_params=metric_params)
-    knclassifier.fit(X_par, y_par)
+    knclassifier.fit(standardize_X(X_par), y_par)
     y_hat_knn = knclassifier.predict(X_test)
     knn_loss = y_hat_knn != y_test
     Error_test_KNN = np.sum(knn_loss) / len(y_test)
@@ -131,8 +134,8 @@ for par_index, test_index in CVOuter.split(X):
     for train_index, val_index in CVInner.split(X_par):
         # Split parameter data into training data and validation data
         sizeDval_RMR[k] = len(val_index)
-        X_train, y_train = X_par[train_index, :], y_par[train_index]
-        X_val, y_val = X_par[val_index, :], y_par[val_index]
+        X_train, y_train = standardize_X(X_par[train_index, :]), y_par[train_index]
+        X_val, y_val = standardize_X(X_par[val_index, :]), y_par[val_index]
 
         # Loop over the complexity parameter for the ANN model (number of hidden units)
         for s, regularization in enumerate(lambdas):
@@ -163,7 +166,7 @@ for par_index, test_index in CVOuter.split(X):
                                 tol=1e-4, random_state=1,
                                 penalty='l2', C=1 / lambda_opt,
                                 max_iter=max_iterations)
-    mdl.fit(X_par, y_par)
+    mdl.fit(standardize_X(X_par), y_par)
     y_hat_rmr = mdl.predict(X_test)
     rmr_loss = y_hat_rmr != y_test
     Error_test_RMR = np.sum(rmr_loss) / len(y_test)

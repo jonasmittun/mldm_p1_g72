@@ -3,6 +3,7 @@
 from matplotlib.pylab import (figure, semilogx, loglog, xlabel, ylabel, legend,
                               title, subplot, show, grid, plot)
 import numpy as np
+from numpy.lib import emath
 from scipy.io import loadmat
 import sklearn.linear_model as lm
 from sklearn import model_selection

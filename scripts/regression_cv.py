@@ -22,6 +22,13 @@ max_iter = 10000  # Maximum number of iterations when training ANN model.
 # models = [lm.LinearRegression(fit_intercept=True), lm.LinearRegression(fit_intercept=False)] # Models
 # models_control_parameters = [range()]
 
+# scale = 5
+# def transform_y_to_scaled(target):
+#     return np.power(np.array([scale]*target.shape[0]), target)
+# def transform_scaled_to_y(scaled):
+#     return np.emath.logn(scale,scaled)
+
+
 # Functions that split the data for cross-validation
 CVOuter = model_selection.KFold(n_splits=K1, shuffle=True)
 CVInner = model_selection.KFold(n_splits=K2, shuffle=True)
@@ -45,21 +52,24 @@ def standardize_X(matrix):
     matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
     return matrix * (1 / np.std(matrix, 0))
 
-def standardize_y(target):
-    target = target - target.mean()
-    return target * (1 / np.std(target))
-
 # ANN model
 def ann_model(n_hidden_units):
     return lambda: torch.nn.Sequential(
         torch.nn.Linear(M, n_hidden_units),  # M features to H hidden units
         # 1st transfer function, either Tanh or ReLU:
-        #torch.nn.Tanh(),
-        torch.nn.ReLU(),
+        torch.nn.Tanh(),
+        # torch.nn.ReLU(),
         torch.nn.Linear(n_hidden_units, 1)  # H hidden units to 1 output neuron
         # torch.nn.Sigmoid()  # final tranfer function
     )
+
+def mean_absolute_percentage_error(y_true, y_pred):
+    return torch.mean(torch.abs(y_true - y_pred) / y_true) * 100
+
 loss_fn = torch.nn.MSELoss()
+loss_fn = torch.nn.HuberLoss(reduction='mean', delta=3.0)
+loss_fn = mean_absolute_percentage_error
+
 
 # Initialization of some variables used later
 Eval = np.zeros((len(hs), K2))
@@ -84,7 +94,7 @@ print("{}\t{}\t{}\t{}\t{}\t{}".format('fold i','h*','error','lambda*','error','B
 est_arr = list()
 ANN_y_hat = np.empty((0))
 RLR_y_hat = np.empty((0))
-y_true = []
+y_true = np.empty((0))
 # ANN_y_hat = np.concatenate((ANN_y_hat, [4,5]))
 
 
@@ -174,7 +184,11 @@ for par_index, test_index in CVOuter.split(X):
     se = np.square(y_test - y_test_est)  # squared error
     mse = np.mean(se)
     Error_test_ann = mse
-    y_true.append(y_test)
+    y_true = np.concatenate((y_true, y_test))
+
+    fig = figure()
+    plot(learning_curve)
+    show()
 
     # Train RLR on D_par:
     # Set up variables in order to train the RLR model
@@ -206,7 +220,7 @@ for par_index, test_index in CVOuter.split(X):
     # Egen += (sum(test_index)/N) * Etest_i
 
     # Print statement to make a table (formatted just to copy into LaTeX)
-    print("{:d} & {:d} & {:.5f} & {:f} & {:.5f} & {:.5f} \\\ \hline".format(i+1, h_opt, Error_test_ann, opt_lambda, Error_test_rlr, Error_test_baseline))
+    print("{:d} & {:d} & {:.10f} & {:f} & {:.10f} & {:.10f} \\\ \hline".format(i+1, h_opt, Error_test_ann, opt_lambda, Error_test_rlr, Error_test_baseline))
     i += 1
 # End of outer loop.
 

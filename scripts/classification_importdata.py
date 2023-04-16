@@ -64,8 +64,8 @@ C = len(classNames)
 X_original = X
 
 # Standardization
-X = X - np.ones((N, 1)) * X.mean(0)
-X = X * (1 / np.std(X, 0))
+# X = X - np.ones((N, 1)) * X.mean(0)
+# X = X * (1 / np.std(X, 0))
 
 # Defining class colors
 class_colors = ['#8dddd0', 'darkgreen', '#ca472f']

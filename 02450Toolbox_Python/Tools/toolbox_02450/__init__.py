@@ -601,7 +601,7 @@ def gausKernelDensity(X,width):
 
 
 def train_neural_net(model, loss_fn, X, y,
-                     n_replicates=3, max_iter = 10000, tolerance=1e-6):
+                     n_replicates=3, max_iter = 10000, tolerance=1e-500):
     """
     Train a neural network with PyTorch based on a training set consisting of
     observations X and class y. The model and loss_fn inputs define the
@@ -689,11 +689,11 @@ def train_neural_net(model, loss_fn, X, y,
         # intended try reducing the lr. If the learning curve hasn't converged
         # (i.e. "flattend out"), you can try try increasing the maximum number of
         # iterations, but also potentially increasing the learning rate:
-        #optimizer = torch.optim.SGD(net.parameters(), lr = 5e-3)
+        optimizer = torch.optim.SGD(net.parameters(), lr = 5e-4)
         
         # A more complicated optimizer is the Adam-algortihm, which is an extension
         # of SGD to adaptively change the learing rate, which is widely used:
-        optimizer = torch.optim.Adam(net.parameters())
+        # optimizer = torch.optim.Adam(net.parameters())
         
         # Train the network while displaying and storing the loss
         # print('\t\t{}\t{}\t\t\t{}'.format('Iter', 'Loss','Rel. loss'))
@@ -708,7 +708,7 @@ def train_neural_net(model, loss_fn, X, y,
             # Convergence check, see if the percentual loss decrease is within
             # tolerance:
             p_delta_loss = np.abs(loss_value-old_loss)/old_loss
-            if p_delta_loss < tolerance: break
+            if abs(p_delta_loss) < tolerance: break
             old_loss = loss_value
             
             # display loss with some frequency:
