@@ -19,6 +19,14 @@ from classification_importdata import *
 # Create crossvalidation partition for evaluation
 K = 10
 
+def standardize_X(matrix):
+    matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
+    # Check if any column has 0 std
+    std = np.std(matrix, 0)
+    b = np.argwhere(std == 0)
+    std[np.reshape(b, (len(b)))] = 1
+    return matrix * (1 / std)
+
 def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_train):
     EgenS = np.zeros(len(complexity))
     EgenS_train = np.zeros(len(complexity))
@@ -50,8 +58,8 @@ j = 0
 Eval_KNN = np.zeros((len(ks), K))
 Eval_KNN_train = np.zeros((len(ks), K))
 for ind_train, ind_test in CV.split(X):
-    X_train, y_train = X[ind_train, :], y[ind_train]
-    X_test, y_test = X[ind_test, :], y[ind_test]
+    X_train, y_train = standardize_X(X[ind_train, :]), y[ind_train]
+    X_test, y_test = standardize_X(X[ind_test, :]), y[ind_test]
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, k_nearest in enumerate(ks):
@@ -85,8 +93,8 @@ j = 0
 Eval_KNN = np.zeros((len(lambdas), K))
 Eval_KNN_train = np.zeros((len(lambdas), K))
 for ind_train, ind_test in CV.split(X):
-    X_train, y_train = X[ind_train, :], y[ind_train]
-    X_test, y_test = X[ind_test, :], y[ind_test]
+    X_train, y_train = standardize_X(X[ind_train, :]), y[ind_train]
+    X_test, y_test = standardize_X(X[ind_test, :]), y[ind_test]
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, regularization in enumerate(lambdas):
