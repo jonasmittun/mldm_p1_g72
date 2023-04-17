@@ -14,8 +14,8 @@ from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
 from standardize import *
 
 # Parameters
-K1 = 10  # Outer fold
-K2 = 10  # Inner fold
+K1 = 2  # Outer fold
+K2 = 2  # Inner fold
 lambdas = np.power(10., np.arange(-4, 3, 0.05))  # Regularization factors in Multinomial Regression
 max_iterations = 10000
 K_max = 20
@@ -178,21 +178,21 @@ alpha = 0.05
 # Matrix scatter plot of attributes
 def matrix_scatter_plot(attributes, prediction, modelname):
     r_mask = np.ones(N, dtype=bool)
-    fig = figure(figsize=(12, 10))
-    m = sum(attributes)
-    for m1 in range(m):
-        for m2 in range(m):
-            subplot(m, m, m1 * m + m2 + 1)
+    figure(figsize=(12, 10))
+    m = len(attributes)
+    for i, m1 in enumerate(attributes):
+        for j, m2 in enumerate(attributes):
+            subplot(m, m, i * m + j + 1)
             for c in range(C):
                 class_mask = ((prediction == c) & r_mask)
                 scatter(np.array(X_original[class_mask, m2]), np.array(X_original[class_mask, m1]), marker='.',
                         s=8 * (10 - m), c=class_colors[c], alpha=0.50)
-                if m1 == m - 1:
+                if i == m - 1:
                     xticks(fontsize=7)
                     xlabel(attributeNames[m2])
                 else:
                     xticks([])
-                if m2 == 0:
+                if j == 0:
                     yticks(fontsize=7)
                     ylabel(attributeNames[m1])
                 else:
@@ -200,23 +200,13 @@ def matrix_scatter_plot(attributes, prediction, modelname):
     subplot(m, m, 1).legend(classNames, bbox_to_anchor=(2, 2.3), loc='upper right')
     suptitle('Attribute scatter plot matrix', fontsize=14)
     savefig("../plots/spm-{}-est.svg".format(modelname), bbox_inches='tight')
-    # show()
-    return fig
 
 
-# att = [1 for _ in range(M)]
-att = [1,0,0,1,0,0,0,0,0]
+
+att = [True for _ in range(M)]
+# att = [False,False,True,True,False,False,False,False,False]
 all_att = np.arange(M)
 masked = all_att[att]
-true_fig = matrix_scatter_plot(masked, y, "true")
-knn_fig = matrix_scatter_plot(masked, KNN_hats, "knn")
-rmr_fig = matrix_scatter_plot(masked, RMR_hats, "rmr")
-matrix_scatter_plot(masked, BASE_hats, "base")
-
-sub, axs = subplots(3)
-axs[0] = true_fig
-axs[1] = knn_fig
-axs[2] = rmr_fig
-sub.show()
-
-
+matrix_scatter_plot(masked, y, "true")
+matrix_scatter_plot(masked, KNN_hats, "knn")
+matrix_scatter_plot(masked, RMR_hats, "rmr")
