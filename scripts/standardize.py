@@ -1,6 +1,6 @@
 import numpy as np
 
-def prepend_zero(matrix):
+def prepend_ones(matrix):
     return np.concatenate((np.ones((matrix.shape[0], 1)), matrix), 1)
 
 def standardize_X(known, test, intercept=False):
@@ -11,7 +11,7 @@ def standardize_X(known, test, intercept=False):
     std[np.reshape(b, (len(b)))] = 1
     complete = test * (1 / std)
     if intercept:
-        return prepend_zero(complete)
+        return prepend_ones(complete)
     return complete
 
 

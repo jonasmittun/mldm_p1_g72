@@ -10,10 +10,10 @@ from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
 from standardize import *
 
 # Parameters
-K1 = 5  # Outer fold
-K2 = 5  # Inner fold
+K1 = 10  # Outer fold
+K2 = 10  # Inner fold
 lambdas = np.power(10., np.arange(-3, 2, 0.1))  # Regularization factors in RLR
-hs = [i for i in range(1, 2)]  # Number of hidden units in ANN
+hs = [i for i in range(1, 3)]  # Number of hidden units in ANN
 max_iter = 10000  # Maximum number of iterations when training ANN model.
 
 # Functions that split the data for cross-validation
@@ -87,7 +87,7 @@ def inner_ann(X_par, y_par, params):
 
 def inner_rlr(X_par, y_par, params, cv_k):
     # Change data to have intercept attribute for the RLR model
-    X_par_intercept = prepend_zero(X_par)
+    X_par_intercept = prepend_ones(X_par)
 
     # Let rlr_validate compute the inner split
     _, opt_lambda, mean_w_vs_lambda, _, _ = rlr_validate(X_par_intercept, y_par, params, cv_k)
@@ -98,13 +98,13 @@ def inner_rlr(X_par, y_par, params, cv_k):
     return opt_lambda  # The optimal coefficients for the RLR model.
 
 
-# Outer loop
+
 def print_latex_table_row(fold, h_opt, Error_test_ann, lambda_opt, Error_test_rlr, Error_test_baseline):
     print("{:d} & {:d} & {:.10f} & {:f} & {:.10f} & {:.10f} \\\\ \\hline".format(fold, h_opt, Error_test_ann,
                                                                                lambda_opt,
                                                                                Error_test_rlr, Error_test_baseline))
 
-
+# Outer loop
 i = 0
 for par_index, test_index in CVOuter.split(X):
     # Split data into test data and parameter data.

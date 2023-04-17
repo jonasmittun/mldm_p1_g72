@@ -128,7 +128,10 @@ logistic = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
                                  tol=1e-4, random_state=1,
                                  penalty='l2', C=1 / lambda_opt,
                                  max_iter=max_iterations)
-logistic.fit(standardize_X(X, X, intercept=True), y)
+logistic.fit(standardize_X(X, X), y)
+print("Classes")
+names = logistic.classes_
+print(names)
 print("Intercept for multinomial regression")
 inter = logistic.intercept_
 print(logistic.intercept_)
@@ -136,20 +139,23 @@ print("Coefficients for multinomial regression")
 coe = logistic.coef_
 print(logistic.coef_)
 
+proba = logistic.predict_proba(standardize_X(X[0:214,:], X[0:214,:]))
+print(np.sum(proba,1))
 
-def pretty(attributeNames, coe):
+
+def pretty(attributeNames, inter, coe):
     attributeNames = ["class","intercept"]+attributeNames.tolist()
     header = " & ".join(attributeNames) + "\\\\ \hline"
     rows = []
     for i, row in enumerate(coe):
-        rows.append(classNames[i]+" & "+" & ".join(["{:.5f}".format(float(c)) for c in row]))
+        rows.append(classNames[i]+" & "+"{:.5f} & ".format(inter[i])+" & ".join(["{:.5f}".format(float(c)) for c in row]))
     body = "\\\\\n".join(rows)
 
     print(header)
     print(body)
 
 
-pretty(attributeNames, coe)
+pretty(attributeNames, inter, coe)
 
 
 print('Ran classification part a >:)')

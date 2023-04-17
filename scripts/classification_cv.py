@@ -10,7 +10,7 @@ import sklearn.linear_model as lm
 from toolbox_02450 import mcnemar
 from matplotlib.pyplot import (figure, subplot, xlabel, ylabel,
                                xticks, yticks, legend, show, hist, title,
-                               subplots_adjust, scatter, savefig, suptitle)
+                               subplots_adjust, scatter, savefig, suptitle, subplots)
 from standardize import *
 
 # Parameters
@@ -78,7 +78,7 @@ def inner_rmr(X_par, y_par, params, cv_k):
     for train_index, val_index in CVInner.split(X_par):
 
         # extract training and test set for current CV fold
-        X_train, X_val = standardize_train_test_pair(X_par[train_index], X_par[val_index], intercept=False)
+        X_train, X_val = standardize_train_test_pair(X_par[train_index], X_par[val_index])
         y_train, y_val = y_par[train_index], y_par[val_index]
 
         split_sizes[j] = len(val_index)
@@ -88,9 +88,7 @@ def inner_rmr(X_par, y_par, params, cv_k):
             mdl = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
                                         tol=1e-4, random_state=1,
                                         penalty='l2', C=1 / lambda_i,
-                                        max_iter=max_iterations,
-                                        fit_intercept=True,
-                                        intercept_scaling=1)
+                                        max_iter=max_iterations)
             mdl.fit(X_train, y_train)
             coe = mdl.coef_
             inter = mdl.intercept_
@@ -180,7 +178,7 @@ alpha = 0.05
 # Matrix scatter plot of attributes
 def matrix_scatter_plot(attributes, prediction, modelname):
     r_mask = np.ones(N, dtype=bool)
-    figure(figsize=(12, 10))
+    fig = figure(figsize=(12, 10))
     m = sum(attributes)
     for m1 in range(m):
         for m2 in range(m):
@@ -203,13 +201,22 @@ def matrix_scatter_plot(attributes, prediction, modelname):
     suptitle('Attribute scatter plot matrix', fontsize=14)
     savefig("../plots/spm-{}-est.svg".format(modelname), bbox_inches='tight')
     # show()
+    return fig
 
 
-att = [1 for _ in range(M)]
-# att = [1,0,0,1,0,1,0,0,1]
+# att = [1 for _ in range(M)]
+att = [1,0,0,1,0,0,0,0,0]
 all_att = np.arange(M)
 masked = all_att[att]
-matrix_scatter_plot(masked, y, "true")
-matrix_scatter_plot(masked, KNN_hats, "knn")
-matrix_scatter_plot(masked, RMR_hats, "rmr")
+true_fig = matrix_scatter_plot(masked, y, "true")
+knn_fig = matrix_scatter_plot(masked, KNN_hats, "knn")
+rmr_fig = matrix_scatter_plot(masked, RMR_hats, "rmr")
 matrix_scatter_plot(masked, BASE_hats, "base")
+
+sub, axs = subplots(3)
+axs[0] = true_fig
+axs[1] = knn_fig
+axs[2] = rmr_fig
+sub.show()
+
+
