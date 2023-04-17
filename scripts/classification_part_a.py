@@ -7,7 +7,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=ConvergenceWarning)
 
 from matplotlib.pylab import (figure, semilogx, loglog, xlabel, ylabel, legend,
-                              title, subplot, show, grid, plot, xscale)
+                              title, subplot, show, grid, plot, xscale, savefig)
 import numpy as np
 from scipy.io import loadmat
 from sklearn.neighbors import KNeighborsClassifier
@@ -86,6 +86,7 @@ xlabel('Nearest neighbors')
 ylabel('Error rate (cross-validation)')
 legend(['Training error', 'Validation error'])
 grid()
+savefig("../plots/knn_optimal.svg", bbox_inches='tight')
 show()
 print("The optimal k is", k_opt)
 
@@ -134,6 +135,7 @@ xlabel('Regularization factor')
 ylabel('Error rate (cross-validation)')
 legend(['Train error', 'Validation error'])
 grid()
+savefig("../plots/rmlr_optimal.svg", bbox_inches='tight')
 show()
 print("The optimal lambda is", lambda_opt)
 

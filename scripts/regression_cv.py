@@ -13,7 +13,7 @@ from standardize import *
 K1 = 5  # Outer fold
 K2 = 5  # Inner fold
 lambdas = np.power(10., np.arange(-3, 2, 0.1))  # Regularization factors in RLR
-hs = [i for i in range(1, 3)]  # Number of hidden units in ANN
+hs = [i for i in range(1, 2)]  # Number of hidden units in ANN
 max_iter = 10000  # Maximum number of iterations when training ANN model.
 
 # Functions that split the data for cross-validation
