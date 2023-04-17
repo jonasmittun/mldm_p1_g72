@@ -14,18 +14,12 @@ from sklearn.neighbors import KNeighborsClassifier
 import sklearn.linear_model as lm
 from sklearn import model_selection
 from classification_importdata import *
+from standardize import *
 
 ## Crossvalidation
 # Create crossvalidation partition for evaluation
 K = 10
 
-def standardize_X(matrix):
-    matrix = matrix - np.ones((matrix.shape[0], 1)) * matrix.mean(0)
-    # Check if any column has 0 std
-    std = np.std(matrix, 0)
-    b = np.argwhere(std == 0)
-    std[np.reshape(b, (len(b)))] = 1
-    return matrix * (1 / std)
 
 def compute_errors_and_opt(complexity, eval_error, train_error, size_val, size_train):
     EgenS = np.zeros(len(complexity))
@@ -58,8 +52,9 @@ j = 0
 Eval_KNN = np.zeros((len(ks), K))
 Eval_KNN_train = np.zeros((len(ks), K))
 for ind_train, ind_test in CV.split(X):
-    X_train, y_train = standardize_X(X[ind_train, :]), y[ind_train]
-    X_test, y_test = standardize_X(X[ind_test, :]), y[ind_test]
+    X_train, X_test = standardize_train_test_pair(X[ind_train, :], X[ind_test, :])
+    y_train, y_test = y[ind_train], y[ind_test]
+
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, k_nearest in enumerate(ks):
@@ -74,9 +69,8 @@ for ind_train, ind_test in CV.split(X):
         Eval_KNN_train[s, j] = np.sum(y_train_est != y_train) / len(y_train)
     j += 1
 
-
-k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eval_KNN,Eval_KNN_train,sizeDval_KNN,sizeDval_KNN_train)
-
+k_opt, knn_validation_error, knn_training_error = compute_errors_and_opt(ks, Eval_KNN, Eval_KNN_train, sizeDval_KNN,
+                                                                         sizeDval_KNN_train)
 
 figure(figsize=(10, 5))
 title('Optimal k: {}'.format(k_opt))
@@ -95,23 +89,16 @@ j = 0
 Eval_KNN = np.zeros((len(lambdas), K))
 Eval_KNN_train = np.zeros((len(lambdas), K))
 for ind_train, ind_test in CV.split(X):
-    X_train, y_train = standardize_X(X[ind_train, :]), y[ind_train]
-    ones = np.ones((X_train.shape[0],1))
-    X_train = np.concatenate((ones, X_train),1)
-
-    # X_train, y_train = np.concatenate((np.ones((X[ind_train, :].shape[0], 1)), standardize_X(X[ind_train, :]))), y[ind_train]
-    # X_test, y_test = np.concatenate((np.ones((X[ind_test, :].shape[0], 1)), standardize_X(X[ind_test, :]))), y[ind_test]
-    X_test, y_test = standardize_X(X[ind_test, :]), y[ind_test]
-    X_test = np.concatenate((np.ones((X_test.shape[0],1)),X_test),1)
-
+    X_train, X_test = standardize_train_test_pair(X[ind_train, :], X[ind_test, :], intercept=True)
+    y_train, y_test = y[ind_train], y[ind_test]
 
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, regularization in enumerate(lambdas):
         logistic = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
-                                             tol=1e-4, random_state=1,
-                                             penalty='l2', C=1 / regularization,
-                                             max_iter=max_iterations)
+                                         tol=1e-4, random_state=1,
+                                         penalty='l2', C=1 / regularization,
+                                         max_iter=max_iterations)
         logistic.fit(X_train, y_train)
         y_val_est = logistic.predict(X_test)
         y_train_est = logistic.predict(X_train)
@@ -121,10 +108,8 @@ for ind_train, ind_test in CV.split(X):
 
     j += 1
 
-
-
-lambda_opt, validation_error, train_error = compute_errors_and_opt(lambdas, Eval_KNN, Eval_KNN_train, sizeDval_KNN, sizeDval_KNN_train)
-
+lambda_opt, validation_error, train_error = compute_errors_and_opt(lambdas, Eval_KNN, Eval_KNN_train, sizeDval_KNN,
+                                                                   sizeDval_KNN_train)
 
 figure(figsize=(10, 5))
 title('Optimal lambda: 1e{0}'.format(lambda_opt))
@@ -138,5 +123,33 @@ grid()
 savefig("../plots/rmlr_optimal.svg", bbox_inches='tight')
 show()
 print("The optimal lambda is", lambda_opt)
+
+logistic = lm.LogisticRegression(solver='lbfgs', multi_class='multinomial',
+                                 tol=1e-4, random_state=1,
+                                 penalty='l2', C=1 / lambda_opt,
+                                 max_iter=max_iterations)
+logistic.fit(standardize_X(X, X, intercept=True), y)
+print("Intercept for multinomial regression")
+inter = logistic.intercept_
+print(logistic.intercept_)
+print("Coefficients for multinomial regression")
+coe = logistic.coef_
+print(logistic.coef_)
+
+
+def pretty(attributeNames, coe):
+    attributeNames = ["class","intercept"]+attributeNames.tolist()
+    header = " & ".join(attributeNames) + "\\\\ \hline"
+    rows = []
+    for i, row in enumerate(coe):
+        rows.append(classNames[i]+" & "+" & ".join(["{:.5f}".format(float(c)) for c in row]))
+    body = "\\\\\n".join(rows)
+
+    print(header)
+    print(body)
+
+
+pretty(attributeNames, coe)
+
 
 print('Ran classification part a >:)')
