@@ -1,7 +1,7 @@
 # exercise 8.1.1
 
 from matplotlib.pylab import (figure, semilogx, loglog, xlabel, ylabel, legend,
-                              title, subplot, show, grid, plot)
+                              title, subplot, show, grid, plot, savefig)
 import numpy as np
 from numpy.lib import emath
 from scipy.io import loadmat
@@ -10,30 +10,11 @@ from sklearn import model_selection
 from regression_importdata import *
 from toolbox_02450 import rlr_validate, train_neural_net
 import torch
-def standardize_X(known, test):
-    test = test - np.ones((test.shape[0], 1)) * known.mean(0)
-    # Check if any column has 0 std
-    std = np.std(known, 0)
-    b = np.argwhere(std == 0)
-    std[np.reshape(b, (len(b)))] = 1
-    return test * (1 / std)
-
-def standardize_y(target):
-    target = target - np.ones(target.shape[0]) * np.mean(target)
-    std = np.std(target)
-    if std == 0:
-        return 0
-    return target * (1 / std)
-
-
-def reverse_standardization_y(target, prediction):
-    mean = np.mean(target)
-    std = np.std(target)
-    return prediction * std + mean
+from standardize import *
 
 
 # Add offset attribute
-X_in = np.concatenate((np.ones((X.shape[0], 1)), standardize_X(X,X)), 1)
+X_in = np.concatenate((np.ones((X.shape[0], 1)), X), 1)
 attributeNames = [u'Offset'] + attributeNames
 # M = M + 1
 
@@ -93,33 +74,33 @@ loss_fn = torch.nn.MSELoss()
 
 
 # Create crossvalidation partition for evaluation
-K = 10
+K = 5
 CV = model_selection.KFold(n_splits=K, shuffle=True)
 max_iterations = 10000
-ks = [i for i in range(1, 4)]
+ks = [i for i in range(1, 6)]
 sizeDval_KNN = np.zeros(K)
 sizeDval_KNN_train = np.zeros(K)
 j = 0
 Eval_KNN = np.zeros((len(ks), K))
 Eval_KNN_train = np.zeros((len(ks), K))
 for ind_train, ind_test in CV.split(X):
-    X_train, y_train = X[ind_train, :], y[ind_train]
-    X_test, y_test = X[ind_test, :], y[ind_test]
+    X_train, X_test = standardize_train_test_pair(X[ind_train, :],X[ind_test, :])
+    y_train, y_test = y[ind_train], y[ind_test]
     sizeDval_KNN[j] = len(ind_test)
     sizeDval_KNN_train[j] = len(ind_train)
     for s, h in enumerate(ks):
         net, final_loss, learning_curve = train_neural_net(ann_model(h),
                                                            loss_fn,
-                                                           X=torch.Tensor(standardize_X(X_train,X_train)),
-                                                           y=torch.Tensor(standardize_y(y_train)).unsqueeze(1),
+                                                           X=torch.Tensor(X_train),
+                                                           y=torch.Tensor(standardize_y_for_training(y_train)).unsqueeze(1),
                                                            n_replicates=1,
                                                            max_iter=10000)
 
-        y_test_est_tensor = net(torch.Tensor(torch.Tensor(standardize_X(X_train,X_test)))).squeeze()
-        y_test_est = reverse_standardization_y(y_train, y_test_est_tensor.detach().numpy())
+        y_test_est_tensor = net(torch.Tensor(X_test)).squeeze().detach().numpy()
+        y_test_est = reverse_standardization_y(y_train, y_test_est_tensor)
         Eval_KNN[s, j] = np.mean(np.square(y_test - y_test_est))
-        y_train_est_tensor = net(torch.Tensor(torch.Tensor(standardize_X(X_train,X_train)))).squeeze()
-        y_train_est = reverse_standardization_y(y_train, y_train_est_tensor.detach().numpy())
+        y_train_est_tensor = net(torch.Tensor(X_train)).squeeze().detach().numpy()
+        y_train_est = reverse_standardization_y(y_train, y_train_est_tensor)
         Eval_KNN_train[s, j] = np.mean(np.square(y_train - y_train_est))
     j += 1
 
@@ -133,8 +114,9 @@ plot(ks, knn_training_error.tolist(), 'r.-')
 plot(ks, knn_validation_error, 'b.-')
 xlabel('Number of hidden units')
 ylabel('Squared mean error (cross-validation)')
-legend(['Validation error','Training error'])
+legend(['Training error','Validation error'])
 grid()
+savefig("../plots/hidden_units.svg", bbox_inches='tight')
 show()
 print("The optimal h is", k_opt)
 
